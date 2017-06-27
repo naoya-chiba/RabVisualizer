@@ -762,7 +762,7 @@ namespace rabv
 		template<typename... Args>
 		void addCorrespondence(Args... args)
 		{
-			correspondences.push_back(rabv::Correspondence(std::forward<Args>(args)...));
+			addCorrespondence(rabv::Correspondence(std::forward<Args>(args)...));
 		}
 
 		void addLines(const rabv::Lines& lines)
