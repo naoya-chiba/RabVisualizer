@@ -5,17 +5,21 @@
 #pragma once
 #pragma warning(disable: 4819)
 
+#include <iostream>
 #include <vector>
 #include <map>
 #include <string>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/common/transforms.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+
 #include <vtkCamera.h>
 #include <vtkCollectionIterator.h>
 #include <vtkAxisFollower.h>
@@ -278,7 +282,6 @@ namespace rabv
 			  visible(visible_) {}
 	};
 
-	// Fast Text3D by Fukuchi
 	class FlatText3D
 	{
 	public:

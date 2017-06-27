@@ -1,9 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 4819)
 
+#include <vector>
 #include <iostream>
 #include <random>
 #include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/correspondence.h>
 #include "rabv.hpp"
 
 int main(int argc, char *argv[])
@@ -219,7 +222,10 @@ int main(int argc, char *argv[])
 	);
 
 
-	// 7. Generate good colors to visualize
+	// 7. Add a cube
+	rab->addCube("cube1", rabv::Point(-1.0, -1.0, -1.0), rabv::Point(-0.5, -0.5, -0.5));
+
+	// 8. Generate good colors to visualize
 	const auto& colors = rabv::Color::devideColors(3 /*The number of color*/);
 
 	rab->addText("Color1", 0,   50, 30, colors[0]);
@@ -232,7 +238,7 @@ int main(int argc, char *argv[])
 	// Viewer Class Usage
 	//
 
-	// 8. Visualze the rab data while the window is closed
+	// 9. Visualze the rab data while the window is closed
 	const auto& viewer1 = rabv::Viewer::create(
 		"Viewer1",	// Title of viewer
 		rab			// Rab data
@@ -245,18 +251,18 @@ int main(int argc, char *argv[])
 	// Writer Class Usage
 	//
 
-	// 9.1. Save the rab data (without an instance of rabv::Writer)
+	// 10.1. Save the rab data (without an instance of rabv::Writer)
 	rabv::Writer::saveRabFile(
 		"./test1.rab", // Filename
 		rab            // Rab data (rabv::Rab::Ptr)
 	);
 
-	// 9.2. Save the rab data (by using an instance of rabv::Writer)
+	// 10.2. Save the rab data (by using an instance of rabv::Writer)
 	auto writer = rabv::Writer::create("./test2.rab");
 	writer->setRab(rab);
 	writer->save();
 	
-	// 10. Visualize from the writer's rab data
+	// 11. Visualize from the writer's rab data
 	const auto& viewer2 = writer->visualize();
 	viewer2->spinLoop();
 
@@ -266,17 +272,17 @@ int main(int argc, char *argv[])
 	// Reader Class Usage
 	//
 
-	// 11.1. Make an instance of rabv::Rab
+	// 12.1. Make an instance of rabv::Rab
 	// If give a path of rab data, it load the data automatically.
 	auto reader = rabv::Reader::create();
 	
-	// 11.2. Set a load path of rab data
+	// 12.2. Set a load path of rab data
 	reader->setPath("./test2.rab");
 	
-	// 11.3. Load the rab data
+	// 12.3. Load the rab data
 	reader->load();
 	
-	// 10. Visualize from the reader's rab data
+	// 13. Visualize from the reader's rab data
 	const auto& viewer3 = reader->visualize();
 	viewer3->spinLoop();
 
