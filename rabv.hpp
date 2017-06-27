@@ -154,14 +154,14 @@ namespace rabv
 			if (rotmat(2, 0) == -1.0)
 			{
 				x = std::atan2(rotmat(1, 1), rotmat(0, 1));
-				y = rabv::pi() / 2;
+				y = rabv::PI<double>() / 2.0;
 				z = 0.0;
 			}
 
 			if (rotmat(2, 0) == 1.0)
 			{
 				x = std::atan2(-rotmat(1, 1), rotmat(0, 1));
-				y = -rabv::pi<double>() / 2.0;
+				y = -rabv::PI<double>() / 2.0;
 				z = 0.0;
 			}
 
@@ -265,7 +265,7 @@ namespace rabv
 
 		Text3D(
 			const std::string& text_,
-			rabv::Point& point = rabv::Point(),
+			const rabv::Point& point = rabv::Point(),
 			const double font_size_ = 0.1,
 			const rabv::Color color_ = rabv::Color(),
 			const bool visible_ = true)
@@ -327,9 +327,9 @@ namespace rabv
 			const rabv::Rotation& rotation_ = rabv::Rotation(),
 			const bool visible_ = true)
 			: name(name_),
-			  offset(offset_),
 			  cloud(cloud_),
 			  color(color_),
+			  offset(offset_),
 			  point_size(point_size_),
 			  rotation(rotation_),
 			  visible(visible_) {};
@@ -337,8 +337,8 @@ namespace rabv
 		// copy constructor
 		Cloud(const rabv::Cloud& cloud_)
 			: name(cloud_.name),
-			  offset(cloud_.offset),
 			  color(cloud_.color),
+			  offset(cloud_.offset),
 			  point_size(cloud_.point_size),
 			  rotation(cloud_.rotation),
 			  visible(cloud_.visible)
@@ -349,8 +349,8 @@ namespace rabv
 		// move constructor
 		Cloud(rabv::Cloud&& cloud_)
 			: name(cloud_.name),
-			  offset(cloud_.offset),
 			  color(cloud_.color),
+			  offset(cloud_.offset),
 			  point_size(cloud_.point_size),
 			  rotation(cloud_.rotation),
 			  visible(cloud_.visible)
@@ -464,15 +464,15 @@ namespace rabv
 		}
 	};
 
-	class Correspondence : Creatable<Correspondence>
+	class Correspondence : public Creatable<Correspondence>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Correspondence> Ptr;
 		typedef boost::shared_ptr<const rabv::Correspondence> ConstPtr;
 		typedef std::pair<int/* from */, int/* to */> IndexPair;
+		std::string name;
 		std::string from;
 		std::string to;
-		std::string name;
 		std::vector<rabv::Correspondence::IndexPair> pairs;
 		rabv::Color color;
 		bool visible;
@@ -707,29 +707,31 @@ namespace rabv
 			const rabv::Rotation& rotation_ = rabv::Rotation(),
 			const bool visible_ = true)
 		{
-			bool found_cloud = false;
-			rabv::Cloud& target_cloud = rabv::Cloud(name_);
 			for (auto& cloud : clouds)
 			{
 				if (cloud.name == name_)
 				{
-					target_cloud = cloud;
-					found_cloud = true;
-					break;
+					cloud.cloud->push_back(point);
+					cloud.point_size = point_size_;
+					cloud.color = color_;
+					cloud.offset = offset_;
+					cloud.rotation = rotation_;
+					cloud.visible = visible_;
+					
+					return;
 				}
 			}
 
-			target_cloud.cloud->push_back(point);
-			target_cloud.point_size = point_size_;
-			target_cloud.color = color_;
-			target_cloud.offset = offset_;
-			target_cloud.rotation = rotation_;
-			target_cloud.visible = visible_;
-
-			if (!found_cloud)
-			{
-				clouds.push_back(target_cloud);
-			}
+			rabv::Cloud cloud = rabv::Cloud(name_);
+			
+			cloud.cloud->push_back(point);
+			cloud.point_size = point_size_;
+			cloud.color = color_;
+			cloud.offset = offset_;
+			cloud.rotation = rotation_;
+			cloud.visible = visible_;
+			
+			clouds.push_back(cloud);
 		}
 
 		void addCorrespondence(const rabv::Correspondence& corr)
@@ -789,7 +791,7 @@ namespace rabv
 			lines_set.push_back(lines);
 		}
 
-		void rabv::Rab::addCube(
+		void addCube(
 			const std::string& name,
 			const rabv::Point& p1,
 			const rabv::Point& p2,
@@ -1093,7 +1095,7 @@ namespace rabv
 		typedef boost::shared_ptr<rabv::Writer> Ptr;
 		typedef boost::shared_ptr<const rabv::Writer> ConstPtr;
 
-		Writer(const std::string& rab_path, rabv::Rab::Ptr& rab = rabv::Rab::create())
+		Writer(const std::string& rab_path, const rabv::Rab::Ptr& rab = rabv::Rab::create())
 			: rab(rab)
 		{
 			setPath(rab_path);
