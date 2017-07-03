@@ -111,24 +111,27 @@ int main(int argc, char *argv[])
 	
 	// 3.1. Add a coordinate system as world coordinate system
 	rab->addCoordinateSystem(
-		0.3 // Scale factor
+		"world", // Unique name of the pointcloud or "world"
+		0.3      // Scale factor
 	);
 
 	// 3.2. Add a coordinate system as pointcloud coordinate system
 	rab->addCoordinateSystem(
-		0.2,      // Scale factor
-		"sample2" // Unique name of the pointcloud
+		"sample2", // Unique name of the pointcloud or "world"
+		0.2        // Scale factor
 	);
 
 
 	// 4. Add correspondence lines between two pointclouds
 	rab->addCorrespondence(
+		"corr1",   // Unique name of the correspondence
 		"sample1", // Unique name of the pointcloud (from)
 		"sample2", // Unique name of the pointcloud (to)
 		corrs1     // Correspondence (pcl::Correspondences)
 	);
 
 	rab->addCorrespondence(
+		"corr2",                   // Unique name of the correspondence
 		"sample1",                 // Unique name of the pointcloud (from)
 		"sample2",                 // Unique name of the pointcloud (to)
 		corrs2,                    // Correspondence (pcl::CorrespondencesPtr)
@@ -136,6 +139,7 @@ int main(int argc, char *argv[])
 	);
 
 	rab->addCorrespondence(
+		"corr3",                   // Unique name of the correspondence
 		"sample1",                 // Unique name of the pointcloud (from)
 		"sample2",                 // Unique name of the pointcloud (to)
 		corrs3,                    // Correspondence (std::vector<std::pair<int, int>>)
@@ -144,12 +148,9 @@ int main(int argc, char *argv[])
 
 
 	// 5.1. Add lines (Make rabv::Lines first)
-	rabv::Lines line1(
-		"line1" // Unique name of the lines
-	);
+	rabv::Lines line1;
 
 	rabv::Lines line2(
-		"line2",	               // Unique name of the lines
 		rabv::Color(128, 128, 255) // Color (r, g, b)
 	);
 
@@ -168,8 +169,14 @@ int main(int argc, char *argv[])
 		{ 1.0, 0.0, 0.0 }   // Point (x, y, z) for "to"
 	));
 
-	rab->addLines(line1);
-	rab->addLines(line2);
+	rab->addLines(
+		"line1", // Unique name of the lines
+		line1    // rabv::Lines
+	);
+	rab->addLines(
+		"line2", // Unique name of the lines
+		line2    // rabv::Lines
+	);
 
 	// 5.2 Add lines (into rab, directly)
 	rab->addLine(

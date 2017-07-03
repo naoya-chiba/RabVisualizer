@@ -10,7 +10,7 @@ enum class Mode { rab, pcd, ply };
 int main(int argc, char* argv[])
 {
 	std::cout
-		<< "Rab Visualizer ver.2.90" << std::endl
+		<< "Rab Visualizer ver.2.91" << std::endl
 		<< "Copyright (C) 2015-2017 Chiba Naoya" << std::endl;
 
 	Mode mode = Mode::rab;
