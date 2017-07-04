@@ -1,21 +1,26 @@
-// Rab Visualizer Ver.2.90 beta
+// Rab Visualizer Ver.3.00-rc1
 // 2017/06/14
 // Copyright (C) 2015-2017 Chiba Naoya
 
 #pragma once
+
 #pragma warning(disable: 4819)
 
+#include <iostream>
 #include <vector>
 #include <map>
 #include <string>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/common/transforms.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+
 #include <vtkCamera.h>
 #include <vtkCollectionIterator.h>
 #include <vtkAxisFollower.h>
@@ -39,32 +44,6 @@ namespace
 {
 namespace rabv
 {
-	class Color;
-	class Rotation;
-	class Line;
-	class Lines;
-	class Text;
-	class Text3D;
-	class FlatText3D;
-	class Cloud;
-	class Normal;
-	class Correspondence;
-	class CoordinateSystem;
-	class Rab;
-	class Viewer;
-	class Reader;
-	class Writer;
-
-	typedef pcl::PointXYZ Point;
-	typedef std::vector<rabv::Lines> LinesSet;
-	typedef std::vector<rabv::Text> Texts;
-	typedef std::vector<rabv::Text3D> Text3Ds;
-	typedef std::vector<rabv::FlatText3D> FlatText3Ds;
-	typedef std::vector<rabv::Cloud> Clouds;
-	typedef std::vector<rabv::Normal> Normals;
-	typedef std::vector<rabv::Correspondence> Correspondences;
-	typedef std::vector<rabv::CoordinateSystem> CoordinateSystems;
-
 	template<typename T>
 	constexpr const T PI()
 	{
@@ -86,6 +65,88 @@ namespace rabv
 			return boost::shared_ptr<T>(new T(*static_cast<T*>(this)));
 		}
 	};
+
+	template<typename T>
+	class UniqueMap : public std::map<std::string, T>
+	{
+	public:
+		void unique_insert(const std::string& name_, const T& element, const bool quiet = false)
+		{
+			int i = 0;
+			std::string name = name_;
+			while (true)
+			{
+				if (this->find(name) == this->end())
+				{
+					break;
+				}
+				else
+				{
+					name = name_ + "_" + std::to_string(i);
+					++i;
+				}
+			}
+
+			if (name != name_)
+			{
+				if (!quiet)
+				{
+					std::stringstream ss;
+					ss	<< "[Rab Visualizer] "
+						<< name << " already exists. New element is renamed as " << name << "." << std::endl;
+
+					pcl::console::print_warn(ss.str().c_str());
+				}
+			}
+
+			this->insert(std::make_pair(name, element));
+		}
+
+		void check_erase(const std::string& name, const bool quiet = false)
+		{
+			if (this->find(name) == this->end())
+			{
+				if (!quiet)
+				{
+					std::stringstream ss;
+					ss	<< "[Rab Visualizer] Connot remove "
+						<< name << ". It does not exist." << std::endl;
+
+					pcl::console::print_warn(ss.str().c_str());
+				}
+			}
+			else
+			{
+				this->erase(name);
+			}
+		}
+	};
+
+	class Color;
+	class Rotation;
+	class Line;
+	class Lines;
+	class Text;
+	class Text3D;
+	class FlatText3D;
+	class Cloud;
+	class Normal;
+	class Correspondence;
+	class CoordinateSystem;
+	class Rab;
+	class Viewer;
+	class Reader;
+	class Writer;
+
+	typedef pcl::PointXYZ Point;
+	typedef UniqueMap<rabv::Lines> LinesSet;
+	typedef std::vector<rabv::Text> Texts;
+	typedef std::vector<rabv::Text3D> Text3Ds;
+	typedef std::vector<rabv::FlatText3D> FlatText3Ds;
+	typedef UniqueMap<rabv::Cloud> Clouds;
+	typedef UniqueMap<rabv::Normal> Normals;
+	typedef UniqueMap<rabv::Correspondence> Correspondences;
+	typedef UniqueMap<rabv::CoordinateSystem> CoordinateSystems;
 
 	class Color
 	{
@@ -143,7 +204,9 @@ namespace rabv
 	class Rotation
 	{
 	public:
-		double x, y, z;
+		double x;
+		double y;
+		double z;
 
 		Rotation(const double x_, const double y_, const double z_) : x(x_), y(y_), z(z_) {}
 		Rotation() : x(0.0), y(0.0), z(0.0) {}
@@ -202,22 +265,24 @@ namespace rabv
 		}
 	};
 
-	class Lines : public Creatable<Lines>
+	class Lines : public Creatable<rabv::Lines>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Lines> Ptr;
 		typedef boost::shared_ptr<const rabv::Lines> ConstPtr;
-		std::string name;
-		std::vector<rabv::Line> lines;
+		double line_width;
 		rabv::Color color;
+		std::vector<rabv::Line> lines;
 		bool visible;
 
 		Lines(
-			const std::string& name_,
+			const double line_width_ = 1.0,
 			const rabv::Color& color_ = rabv::Color(),
 			const std::vector<rabv::Line>& lines_ = std::vector<rabv::Line>(),
 			const bool visible_ = true)
-			: name(name_), lines(lines_), color(color_), visible(visible_) {}
+			: line_width(line_width_), color(color_), lines(lines_), visible(visible_) {}
+		Lines(const Lines::Ptr& lines_)
+		: line_width(lines_->line_width), color(lines_->color), lines(lines_->lines), visible(lines_->visible) {}
 
 		void addLine(const rabv::Line& line)
 		{
@@ -234,7 +299,8 @@ namespace rabv
 	{
 	public:
 		std::string text;
-		int x, y;
+		int x;
+		int y;
 		int font_size;
 		rabv::Color color;
 		bool visible;
@@ -258,7 +324,9 @@ namespace rabv
 	{
 	public:
 		std::string text;
-		double x, y, z;
+		double x;
+		double y;
+		double z;
 		double font_size;
 		rabv::Color color;
 		bool visible;
@@ -278,7 +346,6 @@ namespace rabv
 			  visible(visible_) {}
 	};
 
-	// Fast Text3D by Fukuchi
 	class FlatText3D
 	{
 	public:
@@ -309,16 +376,14 @@ namespace rabv
 	class Cloud
 	{
 	public:
-		std::string name;
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud;
+		int point_size;
 		rabv::Color color;
 		rabv::Point offset;
-		int point_size;
 		rabv::Rotation rotation;
 		bool visible;
 
 		Cloud(
-			const std::string& name_,
 			const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_ =
 				pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>()),
 			const int point_size_ = 1,
@@ -326,8 +391,7 @@ namespace rabv
 			const rabv::Point& offset_ = rabv::Point(),
 			const rabv::Rotation& rotation_ = rabv::Rotation(),
 			const bool visible_ = true)
-			: name(name_),
-			  cloud(cloud_),
+			: cloud(cloud_),
 			  color(color_),
 			  offset(offset_),
 			  point_size(point_size_),
@@ -336,8 +400,7 @@ namespace rabv
 
 		// copy constructor
 		Cloud(const rabv::Cloud& cloud_)
-			: name(cloud_.name),
-			  color(cloud_.color),
+			: color(cloud_.color),
 			  offset(cloud_.offset),
 			  point_size(cloud_.point_size),
 			  rotation(cloud_.rotation),
@@ -348,8 +411,7 @@ namespace rabv
 
 		// move constructor
 		Cloud(rabv::Cloud&& cloud_)
-			: name(cloud_.name),
-			  color(cloud_.color),
+			: color(cloud_.color),
 			  offset(cloud_.offset),
 			  point_size(cloud_.point_size),
 			  rotation(cloud_.rotation),
@@ -361,7 +423,6 @@ namespace rabv
 		// copy
 		Cloud& operator=(const rabv::Cloud& cloud_)
 		{
-			name = cloud_.name;
 			offset = cloud_.offset;
 			cloud = cloud_.cloud->makeShared();
 			color = cloud_.color;
@@ -374,7 +435,6 @@ namespace rabv
 		// move
 		Cloud& operator=(rabv::Cloud&& cloud_)
 		{
-			name = cloud_.name;
 			offset = cloud_.offset;
 			cloud = std::move(cloud_.cloud);
 			color = cloud_.color;
@@ -383,30 +443,41 @@ namespace rabv
 			visible = cloud_.visible;
 			return *this;
 		}
+
+		Eigen::Affine3f affine() const
+		{
+			const Eigen::Vector3f offset_vec(offset.x, offset.y, offset.z);
+			Eigen::Affine3f transform = rotation.affine();
+			transform.translate(offset_vec);
+
+			return transform;
+		}
+
+		Eigen::Matrix4f transform() const
+		{
+			return affine().matrix();
+		}
 	};
 
 	class Normal
 	{
 	public:
-		std::string name;
 		pcl::PointCloud<pcl::Normal>::Ptr normal;
 		int level;
 		double scale;
-		int line_width;
+		double line_width;
 		rabv::Color color;
 		bool visible;
 
 		Normal(
-			const std::string& name_,
 			const pcl::PointCloud<pcl::Normal>::Ptr& normal_ =
 				pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>()),
 			const int level_ = 100,
 			const double scale_ = 0.02,
-			const int line_width_ = 1,
+			const double line_width_ = 1.0,
 			const rabv::Color& color_ = rabv::Color(),
 			const bool visible_ = true)
-			: name(name_),
-			  normal(normal_),
+			: normal(normal_),
 			  level(level_),
 			  scale(scale_),
 			  line_width(line_width_),
@@ -415,8 +486,7 @@ namespace rabv
 
 		// copy constructor
 		Normal(const rabv::Normal& normal_)
-			: name(normal_.name),
-			  level(normal_.level),
+			: level(normal_.level),
 			  scale(normal_.scale),
 			  line_width(normal_.line_width),
 			  color(normal_.color),
@@ -427,8 +497,7 @@ namespace rabv
 
 		// move constructor
 		Normal(rabv::Normal&& normal_)
-			: name(normal_.name),
-			  level(normal_.level),
+			: level(normal_.level),
 			  scale(normal_.scale),
 			  line_width(normal_.line_width),
 			  color(normal_.color),
@@ -440,7 +509,6 @@ namespace rabv
 		// copy
 		Normal& operator=(const rabv::Normal& normal_)
 		{
-			name = normal_.name;
 			normal = normal_.normal->makeShared();
 			level = normal_.level;
 			scale = normal_.scale;
@@ -453,7 +521,6 @@ namespace rabv
 		// move
 		Normal& operator=(rabv::Normal&& normal_)
 		{
-			name = normal_.name;
 			normal = std::move(normal_.normal);
 			level = normal_.level;
 			scale = normal_.scale;
@@ -464,33 +531,34 @@ namespace rabv
 		}
 	};
 
-	class Correspondence : public Creatable<Correspondence>
+	class Correspondence : public Creatable<rabv::Correspondence>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Correspondence> Ptr;
 		typedef boost::shared_ptr<const rabv::Correspondence> ConstPtr;
 		typedef std::pair<int/* from */, int/* to */> IndexPair;
-		std::string name;
 		std::string from;
 		std::string to;
 		std::vector<rabv::Correspondence::IndexPair> pairs;
+		double line_width;
 		rabv::Color color;
 		bool visible;
 
 		Correspondence(
-			const std::string& name_,
 			const std::string& from_,
 			const std::string& to_,
+			const double line_width_ = 1.0,
 			const rabv::Color color_ = rabv::Color(),
 			const bool visible_ = true)
-			: name(name_), from(from_), to(to_), color(color_), visible(visible_) {}
+			: from(from_), to(to_), line_width(line_width_), color(color_), visible(visible_) {}
 		Correspondence(
 			const std::string& from_,
 			const std::string& to_,
 			const std::vector<std::pair<int, int>>& pairs_,
+			const double line_width_ = 1.0,
 			const rabv::Color& color_ = rabv::Color(),
 			const bool visible_ = true)
-			: name(from_ + "_" + to_), from(from_), to(to_), color(color_), visible(visible_)
+			: from(from_), to(to_), line_width(line_width_), color(color_), visible(visible_)
 		{
 			for (const auto& pair : pairs_)
 			{
@@ -501,9 +569,10 @@ namespace rabv
 			const std::string& from_,
 			const std::string& to_,
 			const pcl::Correspondences& correspondences_,
+			const double line_width_ = 1.0,
 			const rabv::Color& color_ = rabv::Color(),
 			const bool visible_ = true)
-			: name(from_ + "_" + to_), from(from_), to(to_), color(color_), visible(visible_)
+			: from(from_), to(to_), line_width(line_width_), color(color_), visible(visible_)
 		{
 			for (const auto& corr : correspondences_)
 			{
@@ -514,29 +583,35 @@ namespace rabv
 			const std::string& from_,
 			const std::string& to_,
 			const pcl::CorrespondencesPtr& correspondences_,
+			const double line_width_ = 1.0,
 			const rabv::Color& color_ = rabv::Color(),
 			const bool visible_ = true)
-			: name(from_ + "_" + to_), from(from_), to(to_), color(color_), visible(visible_)
+			: from(from_), to(to_), line_width(line_width_), color(color_), visible(visible_)
 		{
 			for (const auto& corr : *correspondences_)
 			{
 				pairs.push_back(rabv::Correspondence::IndexPair(corr.index_query, corr.index_match));
 			}
 		}
+		Correspondence(const Correspondence::Ptr& correspondences_)
+			: from(correspondences_->from),
+			  to(correspondences_->to),
+			  pairs(correspondences_->pairs),
+			  line_width(correspondences_->line_width),
+			  color(correspondences_->color),
+			  visible(correspondences_->visible) {}
 	};
 
 	class CoordinateSystem
 	{
 	public:
-		std::string name;
 		double scale;
 		bool visible;
 
 		CoordinateSystem(
 			const double& scale_ = 1.0,
-			const std::string& cloud_name_ = "world",
 			const bool visible_ = true)
-			: name(cloud_name_), scale(scale_), visible(visible_) {}
+			: scale(scale_), visible(visible_) {}
 	};
 
 	boost::property_tree::ptree CameraToPree(const pcl::visualization::Camera& cam)
@@ -581,18 +656,15 @@ namespace rabv
 		}
 		catch (const boost::property_tree::xml_parser::xml_parser_error& e)
 		{
-			std::cerr
-				<< "[Rab Visualizer] Can't load camera settings."
-				<< std::endl << e.what() << std::endl;
+			pcl::console::print_error("[Rab Visualizer] Can't load camera settings.\n");
+			pcl::console::print_error(e.what());
 		}
 		return cam;
 	}
 
-	class Rab : public Creatable<Rab>
+	class Rab : public Creatable<rabv::Rab>
 	{
-	public:
-		typedef boost::shared_ptr<rabv::Rab> Ptr;
-		typedef boost::shared_ptr<const rabv::Rab> ConstPtr;
+	private:
 		rabv::Clouds clouds;
 		rabv::Normals normals;
 		rabv::Correspondences correspondences;
@@ -601,26 +673,55 @@ namespace rabv
 		rabv::Text3Ds text3Ds;
 		rabv::FlatText3Ds flat_text3Ds;
 		rabv::CoordinateSystems coordinate_systems;
-		boost::optional<pcl::visualization::Camera> camera;
+		boost::optional<pcl::visualization::Camera> camera = boost::none;
 
-		void addCloud(const rabv::Cloud& cloud_)
+	public:
+		friend rabv::Writer;
+		friend rabv::Viewer;
+		typedef boost::shared_ptr<rabv::Rab> Ptr;
+		typedef boost::shared_ptr<const rabv::Rab> ConstPtr;
+
+		Rab(const Rab::Ptr& rab_)
+			: clouds(rab_->clouds),
+			  normals(rab_->normals),
+			  correspondences(rab_->correspondences),
+			  lines_set(rab_->lines_set),
+			  texts(rab_->texts),
+			  text3Ds(rab_->text3Ds),
+			  flat_text3Ds(rab_->flat_text3Ds),
+			  coordinate_systems(rab_->coordinate_systems),
+			  camera(rab_->camera) {}
+		Rab() {}
+
+		void addCloud(const std::string& name_, const rabv::Cloud& cloud_)
 		{
-			clouds.push_back(cloud_);
+			clouds.unique_insert(name_, cloud_);
+
 		}
 		template<typename... Args>
-		void addCloud(Args... args)
+		void addCloud(const std::string& name_, Args... args)
 		{
-			clouds.push_back(rabv::Cloud(std::forward<Args>(args)...));
+			addCloud(name_, rabv::Cloud(std::forward<Args>(args)...));
 		}
 
-		void addNormal(const rabv::Normal& cloud_)
+		void removeCloud(const std::string& name)
 		{
-			normals.push_back(cloud_);
+			clouds.check_erase(name);
+		}
+
+		void addNormal(const std::string& name_, const rabv::Normal& normal_)
+		{
+			normals.unique_insert(name_, normal_);
 		}
 		template<typename... Args>
-		void addNormal(Args... args)
+		void addNormal(const std::string& name_, Args... args)
 		{
-			normals.push_back(rabv::Normal(std::forward<Args>(args)...));
+			addNormal(name_, rabv::Normal(std::forward<Args>(args)...));
+		}
+
+		void removeNormal(const std::string& name)
+		{
+			normals.check_erase(name);
 		}
 
 		void addCloudNormal(
@@ -637,7 +738,7 @@ namespace rabv
 			const rabv::Color& normal_color_ = rabv::Color(),
 			const bool visible_ = true)
 		{
-			clouds.push_back(rabv::Cloud(
+			addCloud(
 				name_,
 				cloud_,
 				point_size_,
@@ -645,9 +746,9 @@ namespace rabv
 				offset_,
 				rotation_,
 				visible_
-			));
+			);
 
-			normals.push_back(rabv::Normal(
+			addNormal(
 				name_,
 				normal_,
 				level_,
@@ -655,7 +756,7 @@ namespace rabv
 				line_width_,
 				normal_color_,
 				visible_
-			));
+			);
 		}
 
 		void addCloudNormal(
@@ -676,25 +777,26 @@ namespace rabv
 			pcl::copyPointCloud(*cloud_, *cloud);
 			pcl::copyPointCloud(*cloud_, *normal);
 
-			clouds.push_back(rabv::Cloud(
+			addCloudNormal(
 				name_,
 				cloud,
+				normal,
 				point_size_,
 				cloud_color_,
 				offset_,
 				rotation_,
-				visible_
-			));
-
-			normals.push_back(rabv::Normal(
-				name_,
-				normal,
 				level_,
 				scale_,
 				line_width_,
 				normal_color_,
 				visible_
-			));
+			);
+		}
+
+		void removeCloudNormal(const std::string& name)
+		{
+			clouds.check_erase(name);
+			normals.check_erase(name);
 		}
 
 		// parameters will be overwritten
@@ -707,112 +809,86 @@ namespace rabv
 			const rabv::Rotation& rotation_ = rabv::Rotation(),
 			const bool visible_ = true)
 		{
-			for (auto& cloud : clouds)
+			if (clouds.find(name_) == clouds.end())
 			{
-				if (cloud.name == name_)
-				{
-					cloud.cloud->push_back(point);
-					cloud.point_size = point_size_;
-					cloud.color = color_;
-					cloud.offset = offset_;
-					cloud.rotation = rotation_;
-					cloud.visible = visible_;
-					
-					return;
-				}
+				addCloud(name_);
 			}
 
-			rabv::Cloud cloud = rabv::Cloud(name_);
-			
+			auto& cloud = clouds.find(name_)->second;
+
 			cloud.cloud->push_back(point);
 			cloud.point_size = point_size_;
 			cloud.color = color_;
 			cloud.offset = offset_;
 			cloud.rotation = rotation_;
 			cloud.visible = visible_;
-			
-			clouds.push_back(cloud);
 		}
 
-		void addCorrespondence(const rabv::Correspondence& corr)
+		void addCorrespondence(const std::string& name, const rabv::Correspondence& corr)
 		{
-			int i = 0;
-			bool unique_flag = false;
-			std::string corr_name = corr.name;
-			while (!unique_flag)
-			{
-				unique_flag = true;
-				for (const auto c : correspondences)
-				{
-					if (c.name == corr_name)
-					{
-						unique_flag = false;
-						break;
-					}
-				}
-				if (unique_flag) break;
-				corr_name = corr.name + "_" + boost::lexical_cast<std::string>(i);
-				++i;
-			}
+			correspondences.unique_insert(name, corr);
 
-			auto corr_ = corr;
-			corr_.name = corr_name;
-			correspondences.push_back(corr_);
 		}
 		template<typename... Args>
-		void addCorrespondence(Args... args)
+		void addCorrespondence(const std::string& name, Args... args)
 		{
-			correspondences.push_back(rabv::Correspondence(std::forward<Args>(args)...));
+			addCorrespondence(name, rabv::Correspondence(std::forward<Args>(args)...));
 		}
 
-		void addLines(const rabv::Lines& lines)
+		void removeCorrespondence(const std::string& name)
 		{
-			lines_set.push_back(lines);
+			correspondences.check_erase(name);
+		}
+
+		void addLines(const std::string& name, const rabv::Lines& lines)
+		{
+			lines_set.unique_insert(name, lines);
 		}
 		template<typename... Args>
-		void addLines(Args... args)
+		void addLines(const std::string& name, Args... args)
 		{
-			lines_set.push_back(rabv::Lines(std::forward<Args>(args)...));
+			addLines(name, rabv::Lines(std::forward<Args>(args)...));
+		}
+
+		void removeLines(const std::string& name)
+		{
+			lines_set.check_erase(name);
 		}
 
 		template<typename... Args>
 		void addLine(const std::string& name, Args... args)
 		{
-			for (auto& lines : lines_set)
+			if (lines_set.find(name) == lines_set.end())
 			{
-				if (lines.name == name)
-				{
-					lines.addLine(std::forward<Args>(args)...);
-					return;
-				}
+				addLines(name);
 			}
-			rabv::Lines lines(name);
-			lines.addLine(std::forward<Args>(args)...);
-			lines_set.push_back(lines);
+
+			lines_set.find(name)->second.addLine(std::forward<Args>(args)...);
 		}
 
 		void addCube(
 			const std::string& name,
 			const rabv::Point& p1,
 			const rabv::Point& p2,
+			const double line_width = 1.0,
 			const rabv::Color &color = rabv::Color())
 		{
-			rabv::Lines lines(name, color);
+			auto lines = rabv::Lines::create(line_width, color);
 
-			lines.addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p2.x, p1.y, p1.z));
-			lines.addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p1.x, p2.y, p1.z));
-			lines.addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p1.x, p1.y, p2.z));
-			lines.addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p1.x, p1.y, p2.z));
-			lines.addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p1.x, p2.y, p1.z));
-			lines.addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p2.x, p2.y, p2.z));
-			lines.addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p2.x, p1.y, p1.z));
-			lines.addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p1.x, p1.y, p2.z));
-			lines.addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p2.x, p2.y, p2.z));
-			lines.addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p1.x, p2.y, p1.z));
-			lines.addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p2.x, p1.y, p1.z));
-			lines.addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p2.x, p2.y, p2.z));
+			lines->addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p2.x, p1.y, p1.z));
+			lines->addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p1.x, p2.y, p1.z));
+			lines->addLine(rabv::Point(p1.x, p1.y, p1.z), rabv::Point(p1.x, p1.y, p2.z));
+			lines->addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p1.x, p1.y, p2.z));
+			lines->addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p1.x, p2.y, p1.z));
+			lines->addLine(rabv::Point(p1.x, p2.y, p2.z), rabv::Point(p2.x, p2.y, p2.z));
+			lines->addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p2.x, p1.y, p1.z));
+			lines->addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p1.x, p1.y, p2.z));
+			lines->addLine(rabv::Point(p2.x, p1.y, p2.z), rabv::Point(p2.x, p2.y, p2.z));
+			lines->addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p1.x, p2.y, p1.z));
+			lines->addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p2.x, p1.y, p1.z));
+			lines->addLine(rabv::Point(p2.x, p2.y, p1.z), rabv::Point(p2.x, p2.y, p2.z));
 
-			lines_set.push_back(lines);
+			addLines(name, lines);
 		}
 
 		void addText(const rabv::Text& text)
@@ -845,17 +921,26 @@ namespace rabv
 			flat_text3Ds.push_back(rabv::FlatText3D(std::forward<Args>(args)...));
 		}
 
-		void addCoordinateSystem(const rabv::CoordinateSystem& coordinate_system)
+		void addCoordinateSystem(const std::string& name, const rabv::CoordinateSystem& coordinate_system)
 		{
-			coordinate_systems.push_back(coordinate_system);
+			coordinate_systems.unique_insert(name, coordinate_system);
 		}
 		template<typename... Args>
-		void addCoordinateSystem(Args... args)
+		void addCoordinateSystem(const std::string& name = "world", Args... args)
 		{
-			coordinate_systems.push_back(rabv::CoordinateSystem(std::forward<Args>(args)...));
+			addCoordinateSystem(name, rabv::CoordinateSystem(std::forward<Args>(args)...));
+		}
+
+		void removeCoordinateSystem(const std::string& name)
+		{
+			coordinate_systems.check_erase(name);
 		}
 
 		void setCamera(const pcl::visualization::Camera& cam)
+		{
+			camera = cam;
+		}
+		void setCamera(const boost::none_t cam)
 		{
 			camera = cam;
 		}
@@ -870,7 +955,7 @@ namespace rabv
 			const boost::filesystem::path& camfile_path_);
 	};
 
-	class Viewer : public Creatable<Viewer>
+	class Viewer : public Creatable<rabv::Viewer>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Viewer> Ptr;
@@ -888,17 +973,22 @@ namespace rabv
 		{
 			initPclViewer(visualize_);
 		}
-
 		Viewer(
 			const std::string& viewer_name_ = "Viewer",
 			const rabv::Rab::Ptr rab_ = rabv::Rab::create(),
 			const bool visualize_ = true)
-			: viewer_name(viewer_name_), 
-			camfile_path(boost::filesystem::current_path() / (viewer_name_ + "_cam.txt")),
-			pcl_viewer(new pcl::visualization::PCLVisualizer(viewer_name_)), rab(rab_)
+			: viewer_name(viewer_name_),
+			  camfile_path(boost::filesystem::current_path() / (viewer_name_ + "_cam.txt")),
+			  pcl_viewer(new pcl::visualization::PCLVisualizer(viewer_name_)),
+			  rab(rab_)
 		{
 			initPclViewer(visualize_);
 		}
+		Viewer(const Viewer::Ptr& viewer_)
+			: viewer_name(viewer_->viewer_name),
+			  camfile_path(viewer_->camfile_path),
+			  pcl_viewer(new pcl::visualization::PCLVisualizer(*viewer_->pcl_viewer)),
+			  rab(viewer_->rab->makeShared()) {}
 
 		void visualize();
 
@@ -935,9 +1025,9 @@ namespace rabv
 			pcl::visualization::Camera cam;
 			pcl_viewer->getCameraParameters(cam);
 
-			if (!rab->camera)
+			if (!rab->getCamera())
 			{
-				rab->camera = cam;
+				rab->setCamera(cam);
 			}
 
 			const auto parent_path = boost::filesystem::path(camfile_path).parent_path();
@@ -950,16 +1040,16 @@ namespace rabv
 			{
 				boost::property_tree::xml_parser::write_xml(
 					camfile_path.string(),
-					rabv::CameraToPree(*(rab->camera)),
+					rabv::CameraToPree(*(rab->getCamera())),
 					std::locale(),
 					boost::property_tree::xml_writer_make_settings<boost::property_tree::ptree::key_type>('\t', 1)
 				);
 			}
 			catch (const boost::property_tree::xml_parser::xml_parser_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Can't write camera settings."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Can't write camera settings.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
 			}
 		}
 
@@ -969,15 +1059,15 @@ namespace rabv
 			try
 			{
 				boost::property_tree::read_xml(camfile_path.string(), cam_ptree);
-				rab->camera = rabv::PreeToCamera(cam_ptree);
-				const auto& cam = *(rab->camera);
+				rab->setCamera(rabv::PreeToCamera(cam_ptree));
+				const auto& cam = *(rab->getCamera());
 				pcl_viewer->setCameraParameters(cam);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: camera settings file load error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: camera settings file load error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
 			}
 
 			vtkSmartPointer<vtkRenderer> renderer =
@@ -991,13 +1081,43 @@ namespace rabv
 			if (event.getKeySym() == "s" && event.keyDown())
 			{
 				viewer->saveCameraParams();
-				std::cout << "[Rab Visualizer] Camera Parameter is saved." << std::endl;
+				pcl::console::print_info("[Rab Visualizer] Camera Parameter is saved.");
 			}
 			else if (event.getKeySym() == "l" && event.keyDown())
 			{
 				viewer->loadCameraParams();
-				std::cout << "[Rab Visualizer] Camera Parameter is loaded." << std::endl;
+				pcl::console::print_info("[Rab Visualizer] Camera Parameter is loaded.");
 			}
+		}
+
+		static void pointPickupEvent(const pcl::visualization::PointPickingEvent& event)
+		{
+			const int index = event.getPointIndex();
+			if (index == -1)
+			{
+				return;
+			}
+
+			static rabv::Point prev_point;
+			rabv::Point point;
+			event.getPoint(point.x, point.y, point.z);
+
+			const rabv::Point diff(
+				point.x - prev_point.x,
+				point.y - prev_point.y,
+				point.z - prev_point.z
+			);
+
+			std::stringstream ss;
+
+			ss	<< "Index: " << index
+				<< ", Point: " << point.x << " " << point.y << " " << point.z << std::endl
+				<< "Distance from the origin: " << point.getVector3fMap().norm() << std::endl
+				<< "Diff (prev point) : " << diff << std::endl << std::endl;
+
+			pcl::console::print_info(ss.str().c_str());
+
+			prev_point = point;
 		}
 
 		pcl::visualization::PCLVisualizer::Ptr getPCLVisualizer() const
@@ -1017,6 +1137,7 @@ namespace rabv
 				pcl_viewer->getRendererCollection()->GetFirstRenderer()->GetActiveCamera();
 			cam->SetParallelProjection(1);
 			pcl_viewer->registerKeyboardCallback(rabv::Viewer::keyboardEvent, (void *)this);
+			pcl_viewer->registerPointPickingCallback(rabv::Viewer::pointPickupEvent);
 			if (visualize_)
 			{
 				visualize();
@@ -1024,7 +1145,7 @@ namespace rabv
 		}
 	};
 
-	class Reader : public Creatable<Reader>
+	class Reader : public Creatable<rabv::Reader>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Reader> Ptr;
@@ -1037,6 +1158,13 @@ namespace rabv
 		}
 		Reader(const std::string& rabfile_path_)
 			: rabfile_path(rabfile_path_), camfile_path(getCamfilePath(rabfile_path_))
+		{
+			load();
+		}
+		Reader(const rabv::Reader::Ptr& reader_)
+			: rabfile_path(reader_->rabfile_path),
+			  camfile_path(reader_->camfile_path),
+			  rab(reader_->rab->makeShared())
 		{
 			load();
 		}
@@ -1089,7 +1217,7 @@ namespace rabv
 		rabv::Rab::Ptr rab;
 	};
 
-	class Writer : public Creatable<Writer>
+	class Writer : public Creatable<rabv::Writer>
 	{
 	public:
 		typedef boost::shared_ptr<rabv::Writer> Ptr;
@@ -1100,6 +1228,8 @@ namespace rabv
 		{
 			setPath(rab_path);
 		}
+		Writer(const rabv::Writer::Ptr& writer_)
+			: rab_name(writer_->rab_name), path(writer_->path), rab(writer_->rab->makeShared()) {}
 
 		void setPath(const std::string& rab_path_)
 		{
@@ -1155,189 +1285,263 @@ boost::shared_ptr<rabv::Viewer> rabv::Rab::visualize(
 
 void rabv::Viewer::visualize()
 {
-	if (pcl_viewer->wasStopped()) return;
+	if (pcl_viewer->wasStopped())
+	{
+		return;
+	}
 
 	// remove all drawing objects
 	pcl_viewer->removeAllPointClouds();
 	pcl_viewer->removeAllShapes();
-	//pcl_viewer->removeAllCoordinateSystems(); in this version's PCL, this function doesn't work.
+	pcl_viewer->removeAllCoordinateSystems(); //in this version's PCL, this function doesn't work.
 	pcl_viewer->removeCoordinateSystem("world");
-
-	// prepare coors and add world coor
-	std::vector<std::pair<std::string, double>> coors;
-	for (const auto& coor : rab->coordinate_systems)
+	for (const auto& cloud : rab->clouds)
 	{
-		if (!coor.visible) continue;
-
-		if (coor.name == "world")
-		{
-			pcl_viewer->addCoordinateSystem(coor.scale);
-		}
-		coors.push_back(std::make_pair(coor.name, coor.scale));
+		pcl_viewer->removeCoordinateSystem(cloud.first);
 	}
 
 	// add point cloud and coor
-	std::vector<std::string> used_name;
-	std::map<std::string, pcl::PointCloud<pcl::PointXYZ>::Ptr> trans_clouds;
-	for (const auto& cloud : rab->clouds)
+	UniqueMap<pcl::PointCloud<pcl::PointXYZ>::Ptr> trans_clouds;
+	for (const auto& cloud_pair : rab->clouds)
 	{
+		const auto& name = cloud_pair.first;
+		const auto& cloud = cloud_pair.second;
+
+		pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+		pcl::transformPointCloud(*cloud.cloud, *trans_cloud, cloud.transform());
+
+		trans_clouds.unique_insert(name, trans_cloud);
+	}
+
+	for (const auto& cloud_pair : rab->clouds)
+	{
+		const auto& name = cloud_pair.first;
+		const auto& cloud = cloud_pair.second;
+
 		if (!cloud.visible)
 		{
 			continue;
 		}
 
-		int i = 0;
-		std::string cloud_name = cloud.name;
-		while (std::find(used_name.begin(), used_name.end(), cloud_name) != used_name.end())
-		{
-			cloud_name = cloud.name + "_" + std::to_string(i);
-			++i;
-		}
-		used_name.push_back(cloud_name);
-
-		// this is bad workaround
-		pcl_viewer->removeCoordinateSystem(cloud_name);
-
-		// load transform
-		Eigen::Vector3f offset;
-		offset[0] = cloud.offset.x;
-		offset[1] = cloud.offset.y;
-		offset[2] = cloud.offset.z;
-		Eigen::Affine3f transform = cloud.rotation.affine();
-		transform.translate(offset);
-
-		pcl::PointCloud<pcl::PointXYZ>::Ptr trans_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-		pcl::transformPointCloud(*cloud.cloud, *trans_cloud, transform);
+		const auto& trans_cloud = trans_clouds[name];
 
 		pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> color_handler(
 			trans_cloud, cloud.color.r, cloud.color.g, cloud.color.b);
 
-		pcl_viewer->addPointCloud(trans_cloud, color_handler, cloud_name);
+		pcl_viewer->addPointCloud(trans_cloud, color_handler, name);
 		pcl_viewer->setPointCloudRenderingProperties(
-			pcl::visualization::PCL_VISUALIZER_POINT_SIZE, cloud.point_size, cloud_name);
-		trans_clouds.insert(std::make_pair(cloud_name, trans_cloud));
+			pcl::visualization::PCL_VISUALIZER_POINT_SIZE, cloud.point_size, name);
+	}
 
-		for (const auto& coor : coors)
+	for (const auto& coor_pair : rab->coordinate_systems)
+	{
+		const auto& coor_name = coor_pair.first;
+		const auto& coor = coor_pair.second;
+
+		if (!coor.visible)
 		{
-			if (coor.first == cloud.name)
+			continue;
+		}
+
+		if (coor_name == "world")
+		{
+			pcl_viewer->addCoordinateSystem(coor.scale);
+		}
+		else
+		{
+			for (const auto& cloud_pair : rab->clouds)
 			{
-				pcl_viewer->removeCoordinateSystem(coor.first);
-				pcl_viewer->addCoordinateSystem(coor.second, transform, cloud.name + "_coor");
+				const auto& cloud_name = cloud_pair.first;
+				const auto& cloud = cloud_pair.second;
+
+				pcl_viewer->removeCoordinateSystem(cloud_name);
+
+				if (coor_name == cloud_name)
+				{
+					pcl_viewer->removeCoordinateSystem(coor_name);
+					pcl_viewer->addCoordinateSystem(coor.scale, cloud.affine(), cloud_name + "_coor");
+				}
 			}
 		}
 	}
 
-	for (const auto& normal : rab->normals)
+	for (const auto& normal_pair : rab->normals)
 	{
+		const auto& name = normal_pair.first;
+		const auto& normal = normal_pair.second;
+
 		if (!normal.visible)
 		{
 			continue;
 		}
 
-		int i = 0;
-		std::string normal_name = normal.name + "_normal";
-		while (std::find(used_name.begin(), used_name.end(), normal_name) != used_name.end())
+		if (trans_clouds.find(name) == trans_clouds.end())
 		{
-			normal_name = normal.name + "_" + std::to_string(i);
-			++i;
-		}
-		used_name.push_back(normal_name);
+			std::stringstream ss;
+			ss << "Rab Visualizer] Error: Normal cannot find base pointcloud named "
+				<< name << "." << std::endl;
 
-		if (trans_clouds.find(normal.name) == trans_clouds.end())
-		{
-			std::cerr
-				<< "[Rab Visualizer] Error: Normal cannot find base pointcloud named "
-				<< normal.name << "." << std::endl;
+			pcl::console::print_error(ss.str().c_str());
+
 			continue;
 		}
 
 		pcl_viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(
-			trans_clouds[normal.name],
+			trans_clouds[name],
 			normal.normal,
 			normal.level,
 			normal.scale,
-			normal_name);
+			name + "_normal");
 		pcl_viewer->setPointCloudRenderingProperties(
 			pcl::visualization::PCL_VISUALIZER_COLOR,
 			static_cast<double>(normal.color.r) / 255.0,
 			static_cast<double>(normal.color.g) / 255.0,
 			static_cast<double>(normal.color.b) / 255.0,
-			normal_name);
+			name + "_normal");
 		pcl_viewer->setPointCloudRenderingProperties(
 			pcl::visualization::PCL_VISUALIZER_LINE_WIDTH,
 			normal.line_width,
-			normal_name);
+			name + "_normal");
 	}
 
-	used_name.clear();
-	for (const auto& corr : rab->correspondences)
+	for (const auto& corr_pair : rab->correspondences)
 	{
-		if (!corr.visible) continue;
+		const auto& name = corr_pair.first + "_correspondence";
+		const auto& corr = corr_pair.second;
 
-		// if cloud_from and cloud_to is found
-		if (trans_clouds.find(corr.from) != trans_clouds.end() ||
-			trans_clouds.find(corr.to) != trans_clouds.end())
+		if (!corr.visible)
 		{
-			int i = 0;
-			std::string corr_name = corr.name;
-			while (std::find(used_name.begin(), used_name.end(), corr_name) != used_name.end())
-			{
-				corr_name = corr.name + "_" + std::to_string(i);
-				++i;
-			}
-			used_name.push_back(corr_name);
-
-			const auto& cloud_from = trans_clouds[corr.from];
-			const auto& cloud_to = trans_clouds[corr.to];
-			for (int i = 0; i < corr.pairs.size(); ++i)
-			{
-				std::stringstream ss_line;
-				ss_line << corr_name << "__" << i;
-
-				const auto& point_from = (*cloud_from)[corr.pairs[i].first];
-				const auto& point_to = (*cloud_to)[corr.pairs[i].second];
-
-				pcl_viewer->addLine(
-					point_from,
-					point_to,
-					static_cast<double>(corr.color.r) / 255,
-					static_cast<double>(corr.color.g) / 255,
-					static_cast<double>(corr.color.b) / 255,
-					ss_line.str());
-			}
+			continue;
 		}
+
+		if (trans_clouds.find(corr.from) == trans_clouds.end() ||
+			trans_clouds.find(corr.to) == trans_clouds.end())
+		{
+			continue;
+		}
+
+		const vtkSmartPointer<vtkPolyData> linesPolyData = vtkSmartPointer<vtkPolyData>::New();
+
+		const auto& cloud_from = trans_clouds[corr.from];
+		const auto& cloud_to = trans_clouds[corr.to];
+
+		const vtkSmartPointer<vtkCellArray> lines_cellarray = vtkSmartPointer<vtkCellArray>::New();
+		const vtkSmartPointer<vtkPoints> pts = vtkSmartPointer<vtkPoints>::New();
+
+		for (int i = 0; i < corr.pairs.size(); ++i)
+		{
+			const auto& point_from = (*cloud_from)[corr.pairs[i].first];
+			const auto& point_to = (*cloud_to)[corr.pairs[i].second];
+
+			const float from[3] = { point_from.x, point_from.y, point_from.z };
+			const float to[3] = { point_to.x, point_to.y, point_to.z };
+			pts->InsertNextPoint(from);
+			pts->InsertNextPoint(to);
+		}
+
+		linesPolyData->SetPoints(pts);
+
+		for (int i = 0; i < corr.pairs.size(); ++i)
+		{
+			const vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+
+			line->GetPointIds()->SetId(0, 2 * i + 0);
+			line->GetPointIds()->SetId(1, 2 * i + 1);
+
+			lines_cellarray->InsertNextCell(line);
+		}
+
+		linesPolyData->SetLines(lines_cellarray);
+
+		const unsigned char color[3] = {
+			static_cast<unsigned char>(corr.color.r),
+			static_cast<unsigned char>(corr.color.g),
+			static_cast<unsigned char>(corr.color.b)
+		};
+
+		const vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+
+		colors->SetNumberOfComponents(3);
+		for (int i = 0; i < corr.pairs.size(); ++i)
+		{
+#if (VTK_MAJOR_VERSION == 7 && VTK_MINOR_VERSION >= 1) || (VTK_MAJOR_VERSION > 7)
+			colors->InsertNextTypedTuple(color);
+#else
+			colors->InsertNextTupleValue(color);
+#endif
+		}
+
+		linesPolyData->GetCellData()->SetScalars(colors);
+
+		const vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+		mapper->SetInputData(linesPolyData);
+
+		pcl_viewer->addModelFromPolyData(mapper->GetInput(), name);
+		pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, corr.line_width, name);
 	}
 
-	used_name.clear();
-	for (const auto& lines : rab->lines_set)
+	for (const auto& lines_pair : rab->lines_set)
 	{
+		const auto& name = lines_pair.first + "_lines";
+		const auto& lines = lines_pair.second;
+
 		if (!lines.visible)
 		{
 			continue;
 		}
 
-		int i = 0;
-		std::string lines_name = lines.name;
-		while (std::find(used_name.begin(), used_name.end(), lines_name) != used_name.end())
-		{
-			lines_name = lines.name + "_" + std::to_string(i);
-			++i;
-		}
-		used_name.push_back(lines_name);
+		const vtkSmartPointer<vtkPolyData> linesPolyData = vtkSmartPointer<vtkPolyData>::New();
+
+		const vtkSmartPointer<vtkCellArray> lines_cellarray = vtkSmartPointer<vtkCellArray>::New();
+		const vtkSmartPointer<vtkPoints> pts = vtkSmartPointer<vtkPoints>::New();
 
 		for (int i = 0; i < lines.lines.size(); ++i)
 		{
-			std::stringstream ss_line;
-			ss_line << lines_name << "_" << i;
-
-			pcl_viewer->addLine(
-				rabv::Point(lines.lines[i].from.x, lines.lines[i].from.y, lines.lines[i].from.z),
-				rabv::Point(lines.lines[i].to.x, lines.lines[i].to.y, lines.lines[i].to.z),
-				static_cast<double>(lines.color.r) / 255,
-				static_cast<double>(lines.color.g) / 255,
-				static_cast<double>(lines.color.b) / 255,
-				ss_line.str());
+			const float from[3] = { lines.lines[i].from.x, lines.lines[i].from.y, lines.lines[i].from.z };
+			const float to[3] = { lines.lines[i].to.x, lines.lines[i].to.y, lines.lines[i].to.z };
+			pts->InsertNextPoint(from);
+			pts->InsertNextPoint(to);
 		}
+
+		linesPolyData->SetPoints(pts);
+
+		for (int i = 0; i < lines.lines.size(); ++i)
+		{
+			const vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+
+			line->GetPointIds()->SetId(0, 2 * i + 0);
+			line->GetPointIds()->SetId(1, 2 * i + 1);
+
+			lines_cellarray->InsertNextCell(line);
+		}
+
+		linesPolyData->SetLines(lines_cellarray);
+
+		const unsigned char color[3] = {
+			static_cast<unsigned char>(lines.color.r),
+			static_cast<unsigned char>(lines.color.g),
+			static_cast<unsigned char>(lines.color.b)
+		};
+
+		const vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+
+		colors->SetNumberOfComponents(3);
+		for (int i = 0; i < lines.lines.size(); ++i)
+		{
+#if (VTK_MAJOR_VERSION == 7 && VTK_MINOR_VERSION >= 1) || (VTK_MAJOR_VERSION > 7)
+			colors->InsertNextTypedTuple(color);
+#else
+			colors->InsertNextTupleValue(color);
+#endif
+		}
+
+		linesPolyData->GetCellData()->SetScalars(colors);
+
+		const vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+		mapper->SetInputData(linesPolyData);
+
+		pcl_viewer->addModelFromPolyData(mapper->GetInput(), name);
+		pcl_viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, lines.line_width, name);
 	}
 
 	for (int i = 0; i < rab->texts.size(); ++i)
@@ -1356,11 +1560,10 @@ void rabv::Viewer::visualize()
 			static_cast<double>(text.color.r) / 255,
 			static_cast<double>(text.color.g) / 255,
 			static_cast<double>(text.color.b) / 255,
-			std::string("text_") + boost::lexical_cast<std::string>(i)
+			std::string("text_") + std::to_string(i)
 		);
 	}
 
-	// text3D
 	for (int i = 0; i < rab->text3Ds.size(); ++i)
 	{
 		const rabv::Text3D& text3D = rab->text3Ds[i];
@@ -1376,57 +1579,56 @@ void rabv::Viewer::visualize()
 			static_cast<double>(text3D.color.r) / 255,
 			static_cast<double>(text3D.color.g) / 255,
 			static_cast<double>(text3D.color.b) / 255,
-			std::string("text3D_") + boost::lexical_cast<std::string>(i)
+			std::string("text3D_") + std::to_string(i)
 		);
 	}
 
 	if (rab->flat_text3Ds.size() > 0)
 	{
-		const vtkSmartPointer<vtkAppendPolyData> append_filter =
-			vtkSmartPointer<vtkAppendPolyData>::New();
-		for (int j = 0; j < rab->flat_text3Ds.size(); ++j)
+		const auto append_filter = vtkSmartPointer<vtkAppendPolyData>::New();
+		for (const auto& flat_text3D : rab->flat_text3Ds)
 		{
-			const FlatText3D& flat_text3D = rab->flat_text3Ds[j];
 			if (!flat_text3D.visible)
 			{
 				continue;
 			}
 
-			const vtkSmartPointer<vtkVectorText> vec_text =
-				vtkSmartPointer<vtkVectorText>::New();
+			const auto vec_text = vtkSmartPointer<vtkVectorText>::New();
 			vec_text->SetText(flat_text3D.text.c_str());
 			vec_text->Update();
 
-			vtkPolyData* const polydata = vec_text->GetOutput();
+			const auto polydata = vec_text->GetOutput();
 
-			for (int j = 0; j < polydata->GetNumberOfPoints(); ++j)
+			for (int i = 0; i < polydata->GetNumberOfPoints(); ++i)
 			{
-				const double* point = polydata->GetPoint(j);
+				const double* point = polydata->GetPoint(i);
 				const Eigen::Matrix3f rmat = flat_text3D.rotation.matrix();
 				const Eigen::Vector3f vec(point[0], point[1], point[2]);
 				const Eigen::Vector3f t = rmat * vec;
 
 				polydata->GetPoints()->SetPoint(
-					j,
+					i,
 					t[0] * flat_text3D.font_size + flat_text3D.x,
 					t[1] * flat_text3D.font_size + flat_text3D.y,
 					t[2] * flat_text3D.font_size + flat_text3D.z);
 			}
 
-			//Set colors
 			const unsigned char color[3] = {
 				static_cast<unsigned char>(flat_text3D.color.r),
 				static_cast<unsigned char>(flat_text3D.color.g),
 				static_cast<unsigned char>(flat_text3D.color.b)
 			};
 
-			const vtkSmartPointer<vtkUnsignedCharArray> colors =
-				vtkSmartPointer<vtkUnsignedCharArray>::New();
+			const auto colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
 			colors->SetNumberOfComponents(3);
 
-			for (int j = 0; j < polydata->GetNumberOfPoints(); ++j)
+			for (int i = 0; i < polydata->GetNumberOfPoints(); ++i)
 			{
+#if (VTK_MAJOR_VERSION == 7 && VTK_MINOR_VERSION >= 1) || (VTK_MAJOR_VERSION > 7)
 				colors->InsertNextTypedTuple(color);
+#else
+				colors->InsertNextTupleValue(color);
+#endif
 			}
 
 			polydata->GetCellData()->SetScalars(colors);
@@ -1435,15 +1637,13 @@ void rabv::Viewer::visualize()
 		}
 		append_filter->Update();
 
-		//Create a mapper and actor
-		const vtkSmartPointer<vtkPolyDataMapper> mapper =
-			vtkSmartPointer<vtkPolyDataMapper>::New();
+		const auto mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 		mapper->SetInputConnection(append_filter->GetOutputPort());
+
 		pcl_viewer->addModelFromPolyData(mapper->GetInput(), "3DTextSet");
 	}
 
-	vtkSmartPointer<vtkRenderer> renderer =
-		pcl_viewer->getRendererCollection()->GetFirstRenderer();
+	const auto& renderer = pcl_viewer->getRendererCollection()->GetFirstRenderer();
 	renderer->ResetCamera();
 	if (rab->camera)
 	{
@@ -1467,27 +1667,26 @@ void rabv::Reader::load()
 	}
 	catch (boost::property_tree::ptree_error& e)
 	{
-		std::cerr
-			<< "[Rab Visualizer] Error: rab file load error."
-			<< std::endl << e.what() << std::endl;
+		pcl::console::print_error("[Rab Visualizer] Error: rab file load error.\n");
+		pcl::console::print_error(e.what());
+		pcl::console::print_error("\n");
 	}
 
 	try
 	{
 		if (ptree.get<int>("version", 1) != 3)
 		{
-			std::cerr
-				<< "[Rab Visualizer] Error: rab file version error." << std::endl;
+			pcl::console::print_error("[Rab Visualizer] Error: rab file version error.\n");
 		}
 	}
 	catch (boost::property_tree::ptree_error& e)
 	{
-		std::cerr
-			<< "[Rab Visualizer] Error: rab file load error."
-			<< std::endl << e.what() << std::endl;
+		pcl::console::print_error("[Rab Visualizer] Error: rab file load error.\n");
+		pcl::console::print_error(e.what());
+		pcl::console::print_error("\n");
 	}
 
-	rab = Rab::create();
+	rab = rabv::Rab::create();
 	
 	if (ptree.get_child_optional("cloudXYZ"))
 	{
@@ -1496,15 +1695,15 @@ void rabv::Reader::load()
 			const auto& ptree_ = ptree_itr.second;
 			try
 			{
-				rabv::Cloud cloud(ptree_.get<std::string>("name"));
+				const std::string& name = ptree_.get<std::string>("name");
+
+				rabv::Cloud cloud;
 				const auto pcd_filename = ptree_.get<std::string>("name") + ".pcd";
 				const auto pcd_path = boost::filesystem::absolute(pcd_filename, data_dir_path);
 
 				if (pcl::io::loadPCDFile(pcd_path.string(), *(cloud.cloud)) == -1)
 				{
-					std::cerr
-						<< "[Rab Visualizer] Error: pcd file load error."
-						<< std::endl << " File: " << pcd_filename << std::endl;
+					pcl::console::print_error("[Rab Visualizer] Error: pcd file load error.\n");
 					continue;
 				}
 
@@ -1526,19 +1725,19 @@ void rabv::Reader::load()
 
 				cloud.visible = ptree_.get<bool>("visible", true);
 
-				rab->clouds.push_back(cloud);
+				rab->addCloud(name, cloud);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file format error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
 	}
 
-	// load normal
 	if (ptree.get_child_optional("normal"))
 	{
 		for (const auto& ptree_itr : ptree.get_child("normal", boost::property_tree::ptree()))
@@ -1546,15 +1745,15 @@ void rabv::Reader::load()
 			const auto& ptree_ = ptree_itr.second;
 			try
 			{
-				rabv::Normal normal(ptree_.get<std::string>("name"));
+				const std::string& name = ptree_.get<std::string>("name");
+
+				rabv::Normal normal;
 				const auto pcd_filename = ptree_.get<std::string>("name") + "_normal.pcd";
 				const auto pcd_path = boost::filesystem::absolute(pcd_filename, data_dir_path);
 
 				if (pcl::io::loadPCDFile(pcd_path.string(), *(normal.normal)) == -1)
 				{
-					std::cerr
-						<< "[Rab Visualizer] Error: pcd file load error."
-						<< std::endl << " File: " << pcd_filename << std::endl;
+					pcl::console::print_error("[Rab Visualizer] Error: pcd file load error.\n");
 					continue;
 				}
 
@@ -1565,16 +1764,16 @@ void rabv::Reader::load()
 
 				normal.level = ptree_.get<int>("level", 100);
 				normal.scale = ptree_.get<double>("scale", 0.02);
-				normal.line_width = ptree_.get<int>("line_width", 1);
+				normal.line_width = ptree_.get<double>("line_width", 1);
 				normal.visible = ptree_.get<bool>("visible", true);
 
-				rab->normals.push_back(normal);
+				rab->addNormal(name, normal);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file format error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
 				continue;
 			}
 		}
@@ -1596,9 +1795,9 @@ void rabv::Reader::load()
 				);
 
 				rabv::Correspondence corr(
-					corr_name,
 					ptree_.get<std::string>("from"),
 					ptree_.get<std::string>("to"),
+					ptree_.get<double>("line_width", 1.0),
 					corr_color,
 					ptree_.get<bool>("visible", true)
 				);
@@ -1612,19 +1811,20 @@ void rabv::Reader::load()
 					std::vector<std::string> indices(2);
 					boost::algorithm::split(indices, str, boost::algorithm::is_space());
 					const Correspondence::IndexPair pair = std::make_pair(
-						boost::lexical_cast<int>(indices[0]),
-						boost::lexical_cast<int>(indices[1])
+						std::stoi(indices[0]),
+						std::stoi(indices[1])
 					);
 					corr.pairs.push_back(pair);
 				}
 
-				rab->correspondences.push_back(corr);
+				rab->addCorrespondence(corr_name, corr);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error." << std::endl
-					<< e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file format error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1638,7 +1838,10 @@ void rabv::Reader::load()
 			try
 			{
 				const auto lines_name = ptree_.get<std::string>("name");
-				rabv::Lines lines(lines_name);
+
+				rabv::Lines lines;
+
+				lines.line_width = ptree_.get<double>("line_width", 1.0);
 
 				lines.color = rabv::Color(
 					ptree_.get<int>("color.r", 255),
@@ -1669,13 +1872,14 @@ void rabv::Reader::load()
 					);
 				}
 
-				rab->lines_set.push_back(lines);
+				rab->addLines(lines_name, lines);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error." << std::endl
-					<< e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file firmat error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1688,7 +1892,7 @@ void rabv::Reader::load()
 			const auto&  ptree_ = ptree_itr.second;
 			try
 			{
-				rab->texts.push_back(rabv::Text(
+				rab->addText(
 					ptree_.get<std::string>("text", ""),
 					ptree_.get<int>("x", 0),
 					ptree_.get<int>("y", 0),
@@ -1699,13 +1903,14 @@ void rabv::Reader::load()
 						ptree_.get<int>("color.b", 0)
 					),
 					ptree_.get<bool>("visible", true)
-				));
+				);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file firmat error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1718,7 +1923,7 @@ void rabv::Reader::load()
 			const auto&  ptree_ = ptree_itr.second;
 			try
 			{
-				rab->text3Ds.push_back(rabv::Text3D(
+				rab->addText3D(
 					ptree_.get<std::string>("text", ""),
 					rabv::Point(
 						ptree_.get<double>("x", 0),
@@ -1731,15 +1936,16 @@ void rabv::Reader::load()
 						ptree_.get<int>("color.g", 0),
 						ptree_.get<int>("color.b", 0)
 					),
-					ptree_.get<bool>("visible", true))
+					ptree_.get<bool>("visible", true)
 				);
 
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file firmat error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1752,7 +1958,7 @@ void rabv::Reader::load()
 			const auto&  ptree_ = ptree_itr.second;
 			try
 			{
-				rab->flat_text3Ds.push_back(FlatText3D(
+				rab->addFlatText3D(
 					ptree_.get<std::string>("text", ""),
 					rabv::Point(
 						ptree_.get<double>("x", 0),
@@ -1771,14 +1977,15 @@ void rabv::Reader::load()
 						ptree_.get<int>("rotation.z", 0)
 					),
 					ptree_.get<bool>("visible", true)
-				));
+				);
 
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file firmat error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1791,17 +1998,18 @@ void rabv::Reader::load()
 			const auto&  ptree_ = ptree_itr.second;
 			try
 			{
-				rab->coordinate_systems.push_back(rabv::CoordinateSystem(
-					ptree_.get<double>("scale", 1),
+				rab->addCoordinateSystem(
 					ptree_.get<std::string>("name", "world"),
+					ptree_.get<double>("scale", 1),
 					ptree_.get<bool>("visible", true)
-				));
+				);
 			}
 			catch (boost::property_tree::ptree_error& e)
 			{
-				std::cerr
-					<< "[Rab Visualizer] Error: rab file format error."
-					<< std::endl << e.what() << std::endl;
+				pcl::console::print_error("[Rab Visualizer] Error: rab file firmat error.\n");
+				pcl::console::print_error(e.what());
+				pcl::console::print_error("\n");
+
 				continue;
 			}
 		}
@@ -1813,18 +2021,14 @@ void rabv::Reader::load()
 		try
 		{
 			boost::property_tree::read_xml(camfile_path.string(), ptree);
-			rab->camera = rabv::PreeToCamera(ptree);
+			rab->setCamera(rabv::PreeToCamera(ptree));
 		}
 		catch (boost::property_tree::ptree_error& e)
 		{
-			std::cerr
-				<< "[Rab Visualizer] Error: camera file load error."
-				<< std::endl << e.what() << std::endl;
+			pcl::console::print_error("[Rab Visualizer] Error: camera file load error.\n");
+			pcl::console::print_error(e.what());
+			pcl::console::print_error("\n");
 		}
-	}
-	else
-	{
-		rab->camera = boost::none;
 	}
 }
 
@@ -1836,9 +2040,12 @@ void rabv::Writer::save() const
 
 	ptree.add("version", 3);
 
-	for (const auto& cloud : rab->clouds)
+	for (const auto& cloud_pair : rab->clouds)
 	{
-		const std::string filename = cloud.name + ".pcd";
+		const auto& name = cloud_pair.first;
+		const auto& cloud = cloud_pair.second;
+
+		const std::string filename = name + ".pcd";
 		boost::filesystem::path data_path = path / rab_name / filename;
 		if (cloud.cloud->size() > 0)
 		{
@@ -1846,7 +2053,7 @@ void rabv::Writer::save() const
 		}
 
 		boost::property_tree::ptree ptree_cloud;
-		ptree_cloud.add("name", cloud.name);
+		ptree_cloud.add("name", name);
 		ptree_cloud.add("offset.x", cloud.offset.x);
 		ptree_cloud.add("offset.y", cloud.offset.y);
 		ptree_cloud.add("offset.z", cloud.offset.z);
@@ -1861,9 +2068,12 @@ void rabv::Writer::save() const
 		ptree.add_child("cloudXYZ.cloud", ptree_cloud);
 	}
 
-	for (const auto& normal : rab->normals)
+	for (const auto& normal_pair : rab->normals)
 	{
-		const std::string filename = normal.name + "_normal.pcd";
+		const auto& name = normal_pair.first;
+		const auto& normal = normal_pair.second;
+
+		const std::string filename = name + "_normal.pcd";
 		boost::filesystem::path data_path = path / rab_name / filename;
 		if (normal.normal->size() > 0)
 		{
@@ -1871,7 +2081,7 @@ void rabv::Writer::save() const
 		}
 
 		boost::property_tree::ptree ptree_cloud;
-		ptree_cloud.add("name", normal.name);
+		ptree_cloud.add("name", name);
 		ptree_cloud.add("color.r", normal.color.r);
 		ptree_cloud.add("color.g", normal.color.g);
 		ptree_cloud.add("color.b", normal.color.b);
@@ -1882,9 +2092,12 @@ void rabv::Writer::save() const
 		ptree.add_child("normal.normal", ptree_cloud);
 	}
 
-	for (const auto& corr : rab->correspondences)
+	for (const auto& corr_pair : rab->correspondences)
 	{
-		const std::string filename = corr.name + "_corr.txt";
+		const auto& name = corr_pair.first;
+		const auto& corr = corr_pair.second;
+
+		const std::string filename = name + "_corr.txt";
 		boost::filesystem::path data_path = path / rab_name / filename;
 		std::ofstream ofs(data_path.string());
 		for (const auto& line : corr.pairs)
@@ -1893,9 +2106,10 @@ void rabv::Writer::save() const
 		}
 
 		boost::property_tree::ptree ptree_corr;
-		ptree_corr.add("name", corr.name);
+		ptree_corr.add("name", name);
 		ptree_corr.add("from", corr.from);
 		ptree_corr.add("to", corr.to);
+		ptree_corr.add("line_width", corr.line_width);
 		ptree_corr.add("color.r", corr.color.r);
 		ptree_corr.add("color.g", corr.color.g);
 		ptree_corr.add("color.b", corr.color.b);
@@ -1903,9 +2117,12 @@ void rabv::Writer::save() const
 		ptree.add_child("correspondences.correspondence", ptree_corr);
 	}
 
-	for (const auto& lines : rab->lines_set)
+	for (const auto& lines_pair : rab->lines_set)
 	{
-		const std::string filename = lines.name + "_line.txt";
+		const auto& name = lines_pair.first;
+		const auto& lines = lines_pair.second;
+
+		const std::string filename = name + "_line.txt";
 		boost::filesystem::path data_path = path / rab_name / filename;
 		std::ofstream ofs(data_path.string());
 		for (const auto& line : lines.lines)
@@ -1915,7 +2132,8 @@ void rabv::Writer::save() const
 		}
 
 		boost::property_tree::ptree ptree_lines;
-		ptree_lines.add("name", lines.name);
+		ptree_lines.add("name", name);
+		ptree_lines.add("line_width", lines.line_width);
 		ptree_lines.add("color.r", lines.color.r);
 		ptree_lines.add("color.g", lines.color.g);
 		ptree_lines.add("color.b", lines.color.b);
@@ -1970,12 +2188,15 @@ void rabv::Writer::save() const
 		ptree.add_child("flatText3Ds.flatText3D", ptree_text);
 	}
 
-	for (const auto& coordinate_system : rab->coordinate_systems)
+	for (const auto& coor_pair : rab->coordinate_systems)
 	{
+		const auto& name = coor_pair.first;
+		const auto& coor = coor_pair.second;
+
 		boost::property_tree::ptree ptree_text;
-		ptree_text.add("name", coordinate_system.name);
-		ptree_text.add("scale", coordinate_system.scale);
-		ptree_text.add("visible", coordinate_system.visible);
+		ptree_text.add("name", name);
+		ptree_text.add("scale", coor.scale);
+		ptree_text.add("visible", coor.visible);
 		ptree.add_child("coordinates.coordinate", ptree_text);
 	}
 
@@ -1991,26 +2212,27 @@ void rabv::Writer::save() const
 	}
 	catch (const boost::property_tree::xml_parser::xml_parser_error& e)
 	{
-		std::cerr
-			<< "[Rab Visualizer] Can't write rab file." << std::endl
-			<< e.what() << std::endl;
+		pcl::console::print_error("[Rab Visualizer] Can't write rab file.\n");
+		pcl::console::print_error(e.what());
+		pcl::console::print_error("\n");
 	}
 
-	if (rab->camera)
+	if (rab->getCamera())
 	{
 		try
 		{
 			boost::property_tree::xml_parser::write_xml(
 				Reader::getCamfilePath(data_path).string(),
-				rabv::CameraToPree(*(rab->camera)),
+				rabv::CameraToPree(*(rab->getCamera())),
 				std::locale(),
 				boost::property_tree::xml_writer_make_settings<boost::property_tree::ptree::key_type>('\t', 1)
 			);
 		}
 		catch (const boost::property_tree::xml_parser::xml_parser_error& e)
 		{
-			std::cerr << "[Rab Visualizer] Can't write camera settings." << std::endl
-				<< e.what() << std::endl;
+			pcl::console::print_error("[Rab Visualizer] Can't write camera settings.\n");
+			pcl::console::print_error(e.what());
+			pcl::console::print_error("\n");
 		}
 	}
 }
