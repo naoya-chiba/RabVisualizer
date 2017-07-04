@@ -11,12 +11,12 @@ int main(int argc, char *argv[])
 	const int sample_point_num = 100;
 	const int sample_corr_num = 5;
 
-	//ƒTƒ“ƒvƒ‹ƒf[ƒ^—p—”¶¬Ší
+	//ã‚µãƒ³ãƒ—ãƒ«ãƒ‡ãƒ¼ã‚¿ç”¨ä¹±æ•°ç”Ÿæˆå™¨
 	std::mt19937 mt(20150403);
 	std::normal_distribution<float> nd(0.0, 0.2);
 	std::uniform_int_distribution<int> ud(0, sample_point_num);
 
-	//ƒTƒ“ƒvƒ‹—pPointCloud‚ğ¶¬
+	//ã‚µãƒ³ãƒ—ãƒ«ç”¨PointCloudã‚’ç”Ÿæˆ
 	pcl::PointCloud<pcl::PointXYZ>::Ptr sample_cloud(new pcl::PointCloud<pcl::PointXYZ>());
 	for (int i = 0; i < sample_point_num; ++i)
 	{
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		sample_point_normal->push_back(pn);
 	}
 
-	//ƒTƒ“ƒvƒ‹—pCorrespondence‚ğ¶¬
+	//ã‚µãƒ³ãƒ—ãƒ«ç”¨Correspondenceã‚’ç”Ÿæˆ
 	pcl::Correspondences corrs1;
 	pcl::CorrespondencesPtr corrs2(new pcl::Correspondences());
 	std::vector<std::pair<int, int>> corrs3;
@@ -57,93 +57,93 @@ int main(int argc, char *argv[])
 
 
 
-	/*** ‚±‚±‚©‚çRabg—pƒTƒ“ƒvƒ‹ ***/
+	/*** ã“ã“ã‹ã‚‰Rabä½¿ç”¨ã‚µãƒ³ãƒ—ãƒ« ***/
 
-	//Rab‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬
+	//Rabã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆ
 	auto rab = rabv::Rab::create();
 
-	//PointCloud‚Ì’Ç‰Á
+	//PointCloudã®è¿½åŠ 
 	rab->addCloud(
-		"sample1",		//¯•Ê–¼(‚»‚ê‚¼‚ê•Ê–¼‚Å‚ ‚é‚±‚Æ)
-		sample_cloud	//ƒf[ƒ^CPointCloud::Ptr‚Å—^‚¦‚é
+		"sample1",		//è­˜åˆ¥å(ãã‚Œãã‚Œåˆ¥åã§ã‚ã‚‹ã“ã¨)
+		sample_cloud	//ãƒ‡ãƒ¼ã‚¿ï¼ŒPointCloud::Ptrã§ä¸ãˆã‚‹
 	);
 	rab->addCloud(
-		"sample2",						//¯•Ê–¼
-		sample_cloud,					//ƒf[ƒ^
-		1,								//“_‚Ì‘å‚«‚³
-		rabv::Color(255, 255, 128),		//F(R, G, B)
-		rabv::Point(2.0, 0.0, 0.0),		//•½sˆÚ“®ƒIƒtƒZƒbƒg(x, y, z)
-		rabv::Rotation(0.5, 0.0, 0.0)	//‰ñ“](x-axis, y-axis, z-axis)
+		"sample2",						//è­˜åˆ¥å
+		sample_cloud,					//ãƒ‡ãƒ¼ã‚¿
+		1,								//ç‚¹ã®å¤§ãã•
+		rabv::Color(255, 255, 128),		//è‰²(R, G, B)
+		rabv::Point(2.0, 0.0, 0.0),		//å¹³è¡Œç§»å‹•ã‚ªãƒ•ã‚»ãƒƒãƒˆ(x, y, z)
+		rabv::Rotation(0.5, 0.0, 0.0)	//å›è»¢(x-axis, y-axis, z-axis)
 	);
 
 	rab->addCloudNormal(
-		"sample3",						//¯•Ê–¼
-		sample_point_normal,			//ƒf[ƒ^
-		1,								//“_‚Ì‘å‚«‚³
-		rabv::Color(255, 0, 128),		//F(R, G, B)
-		rabv::Point(3.0, 0.0, 0.0),		//•½sˆÚ“®ƒIƒtƒZƒbƒg(x, y, z)
-		rabv::Rotation(),				//‰ñ“]‚È‚µ
-		1,								//–@ü‚Ì–§“x
-		0.05,							//–@ü‚Ì’·‚³
-		1,								//–@ü‚Ì‘¾‚³
-		rabv::Color(0, 255, 255)		//–@ü‚ÌF
+		"sample3",						//è­˜åˆ¥å
+		sample_point_normal,			//ãƒ‡ãƒ¼ã‚¿
+		1,								//ç‚¹ã®å¤§ãã•
+		rabv::Color(255, 0, 128),		//è‰²(R, G, B)
+		rabv::Point(3.0, 0.0, 0.0),		//å¹³è¡Œç§»å‹•ã‚ªãƒ•ã‚»ãƒƒãƒˆ(x, y, z)
+		rabv::Rotation(),				//å›è»¢ãªã—
+		1,								//æ³•ç·šã®å¯†åº¦
+		0.05,							//æ³•ç·šã®é•·ã•
+		1,								//æ³•ç·šã®å¤ªã•
+		rabv::Color(0, 255, 255)		//æ³•ç·šã®è‰²
 	);
 	
 	rab->addNormal(
-		"sample1",					//¯•Ê–¼(PointCloud‚Æ‚»‚ë‚¦‚é)
-		sample_normal,				//ƒf[ƒ^
-		1,							//–@ü‚Ì–§“x
-		0.05,						//–@ü‚Ì’·‚³
-		2,							//–@ü‚Ì‘¾‚³
-		rabv::Color(255, 0, 128)	//–@ü‚ÌF
+		"sample1",					//è­˜åˆ¥å(PointCloudã¨ãã‚ãˆã‚‹)
+		sample_normal,				//ãƒ‡ãƒ¼ã‚¿
+		1,							//æ³•ç·šã®å¯†åº¦
+		0.05,						//æ³•ç·šã®é•·ã•
+		2,							//æ³•ç·šã®å¤ªã•
+		rabv::Color(255, 0, 128)	//æ³•ç·šã®è‰²
 	);
 
 
 
-	//CoordinateSystem‚Ì’Ç‰Á(â‘ÎÀ•WŒn)
+	//CoordinateSystemã®è¿½åŠ (çµ¶å¯¾åº§æ¨™ç³»)
 	rab->addCoordinateSystem(
-		0.3	//ƒXƒP[ƒ‹
+		0.3	//ã‚¹ã‚±ãƒ¼ãƒ«
 	);
-	//CoordinateSystem‚Ì’Ç‰Á(“_ŒQÀ•WŒn)
+	//CoordinateSystemã®è¿½åŠ (ç‚¹ç¾¤åº§æ¨™ç³»)
 	rab->addCoordinateSystem(
-		0.2,			//ƒXƒP[ƒ‹
-		"sample2"		//PointCloud¯•Ê–¼
+		0.2,			//ã‚¹ã‚±ãƒ¼ãƒ«
+		"sample2"		//PointCloudè­˜åˆ¥å
 	);
 
-	//Correspondence‚Ì’Ç‰Á
+	//Correspondenceã®è¿½åŠ 
 	rab->addCorrespondence(
-		"sample1",	//PointCloud¯•Ê–¼(from)
-		"sample2",	//PointCloud¯•Ê–¼(to)
-		corrs1		//ƒf[ƒ^(pcl::Correspondences)
-	);
-
-	rab->addCorrespondence(
-		"sample1",					//PointCloud¯•Ê–¼(from)
-		"sample2",					//PointCloud¯•Ê–¼(to)
-		corrs2,						//ƒf[ƒ^(pcl::CorrespondencesPtr‚àOK)
-		rabv::Color(255, 255, 128)	//F(R, G, B)
+		"sample1",	//PointCloudè­˜åˆ¥å(from)
+		"sample2",	//PointCloudè­˜åˆ¥å(to)
+		corrs1		//ãƒ‡ãƒ¼ã‚¿(pcl::Correspondences)
 	);
 
 	rab->addCorrespondence(
-		"sample1",					//PointCloud¯•Ê–¼(from)
-		"sample2",					//PointCloud¯•Ê–¼(to)
-		corrs3,						//ƒf[ƒ^(std::vector<std::pair<int, int>>‚àOK)
-		rabv::Color(255, 128, 128)	//F(R, G, B)
+		"sample1",					//PointCloudè­˜åˆ¥å(from)
+		"sample2",					//PointCloudè­˜åˆ¥å(to)
+		corrs2,						//ãƒ‡ãƒ¼ã‚¿(pcl::CorrespondencesPtrã‚‚OK)
+		rabv::Color(255, 255, 128)	//è‰²(R, G, B)
 	);
 
-	//Line‚Ì’Ç‰Á(æ‚ÉLines‚ğ¶¬‚µ‚Ä‚¨‚­ê‡)
+	rab->addCorrespondence(
+		"sample1",					//PointCloudè­˜åˆ¥å(from)
+		"sample2",					//PointCloudè­˜åˆ¥å(to)
+		corrs3,						//ãƒ‡ãƒ¼ã‚¿(std::vector<std::pair<int, int>>ã‚‚OK)
+		rabv::Color(255, 128, 128)	//è‰²(R, G, B)
+	);
+
+	//Lineã®è¿½åŠ (å…ˆã«Linesã‚’ç”Ÿæˆã—ã¦ãŠãå ´åˆ)
 	rabv::Lines line1(
-		"line1"	//¯•Ê–¼(‚»‚ê‚¼‚ê•Ê–¼‚Å‚ ‚é‚±‚Æ)
+		"line1"	//è­˜åˆ¥å(ãã‚Œãã‚Œåˆ¥åã§ã‚ã‚‹ã“ã¨)
 	);
 	rabv::Lines line2(
-		"line2",					//¯•Ê–¼(‚»‚ê‚¼‚ê•Ê–¼‚Å‚ ‚é‚±‚Æ)
-		rabv::Color(128, 128, 255)	//F(R, G, B)
+		"line2",					//è­˜åˆ¥å(ãã‚Œãã‚Œåˆ¥åã§ã‚ã‚‹ã“ã¨)
+		rabv::Color(128, 128, 255)	//è‰²(R, G, B)
 	);
 
-	//Lines‚ÉLine‚ğ’Ç‰Á
+	//Linesã«Lineã‚’è¿½åŠ 
 	line1.addLine(
-		rabv::Point(1.0, 0.0, 0.0),	//fromÀ•W(X, Y, Z)
-		rabv::Point(1.0, 0.0, 1.0)	//toÀ•W(X, Y, Z)
+		rabv::Point(1.0, 0.0, 0.0),	//fromåº§æ¨™(X, Y, Z)
+		rabv::Point(1.0, 0.0, 1.0)	//toåº§æ¨™(X, Y, Z)
 	);
 	line2.addLine(
 		pcl::PointXYZ(1.0, 1.0, 1.0),	//from(PointXYZ)
@@ -153,53 +153,53 @@ int main(int argc, char *argv[])
 		rabv::Line({ 1.0, 1.0, 0.0 }, { 1.0, 0.0, 0.0 })	//rabv::Line
 	);
 
-	//Lines‚ğwriter‚É’Ç‰Á
+	//Linesã‚’writerã«è¿½åŠ 
 	rab->addLines(line1);
 	rab->addLines(line2);
 
-	//Line‚Ì’Ç‰Á(’€Ÿ¯•Ê–¼‚ğw’è, ‚¿‚å‚Á‚Æ’x‚¢)
-	//‘æˆêˆø”‚É¯•Ê–¼‚ª‘‚¦‚éDˆÈ~‚Íæ‚ÉLines‚ğ¶¬‚µ‚Ä‚¨‚­ê‡‚Æ“¯—l
+	//Lineã®è¿½åŠ (é€æ¬¡è­˜åˆ¥åã‚’æŒ‡å®š, ã¡ã‚‡ã£ã¨é…ã„)
+	//ç¬¬ä¸€å¼•æ•°ã«è­˜åˆ¥åãŒå¢—ãˆã‚‹ï¼ä»¥é™ã¯å…ˆã«Linesã‚’ç”Ÿæˆã—ã¦ãŠãå ´åˆã¨åŒæ§˜
 	rab->addLine("line3", rabv::Point(0.0, 0.0, 0.0), rabv::Point(2.0, 0.0, 0.0));
 	rab->addLine("line3", pcl::PointXYZ(2.0, 1.0, 0.0), pcl::PointXYZ(0.0, 1.0, 0.0));
 	rab->addLine("line3", rabv::Line({ 0.0, 1.0, 0.0 }, { 0.0, 0.0, 0.0 }));
 
-	//Text‚Ì’Ç‰Á
+	//Textã®è¿½åŠ 
 	rab->addText(
-		"Text1"		//•\¦Text
+		"Text1"		//è¡¨ç¤ºText
 	);
 	rab->addText(
-		"Text2",				//•\¦Text
-		300, 0,					//•\¦À•W(X, Y)
-		30,						//•¶šƒTƒCƒY
-		rabv::Color(0, 255, 0)	//F(R, G, B)
+		"Text2",				//è¡¨ç¤ºText
+		300, 0,					//è¡¨ç¤ºåº§æ¨™(X, Y)
+		30,						//æ–‡å­—ã‚µã‚¤ã‚º
+		rabv::Color(0, 255, 0)	//è‰²(R, G, B)
 	);
 
-	//Text3D‚Ì’Ç‰Á
+	//Text3Dã®è¿½åŠ 
 	rab->addText3D(
-		"Text3"			//•\¦Text
+		"Text3"			//è¡¨ç¤ºText
 	);
 	rab->addText3D(
-		"Text4",					//•\¦Text
-		rabv::Point(2.0, 0.5, 0.1),	//•\¦À•W(X, Y, Z)
-		0.1,						//•¶šƒTƒCƒY
-		rabv::Color(0, 255, 0)		//F(R, G, B)
+		"Text4",					//è¡¨ç¤ºText
+		rabv::Point(2.0, 0.5, 0.1),	//è¡¨ç¤ºåº§æ¨™(X, Y, Z)
+		0.1,						//æ–‡å­—ã‚µã‚¤ã‚º
+		rabv::Color(0, 255, 0)		//è‰²(R, G, B)
 	);
 
-	//FlatText3D‚Ì’Ç‰Á
+	//FlatText3Dã®è¿½åŠ 
 	rab->addFlatText3D(
-		"Text5",					//•\¦Text
-		rabv::Point(1.0, 0.5, 0.0)	//•\¦À•W(X, Y, Z)
+		"Text5",					//è¡¨ç¤ºText
+		rabv::Point(1.0, 0.5, 0.0)	//è¡¨ç¤ºåº§æ¨™(X, Y, Z)
 	);
 	rab->addFlatText3D(
-		"Text6",						//•\¦Text
-		rabv::Point(1.0, 0.5, 0.1),		//•\¦À•W(X, Y, Z)
-		0.1,							//•¶šƒTƒCƒY
-		rabv::Color(0, 255, 0),			//F(R, G, B)
-		rabv::Rotation(0.5, 0.0, 0.0)	//‰ñ“](x-axis, y-axis, z-axis)
+		"Text6",						//è¡¨ç¤ºText
+		rabv::Point(1.0, 0.5, 0.1),		//è¡¨ç¤ºåº§æ¨™(X, Y, Z)
+		0.1,							//æ–‡å­—ã‚µã‚¤ã‚º
+		rabv::Color(0, 255, 0),			//è‰²(R, G, B)
+		rabv::Rotation(0.5, 0.0, 0.0)	//å›è»¢(x-axis, y-axis, z-axis)
 	);
 
-	//Œ©‚â‚·‚¢F‚Ì©“®¶¬(by •Ÿ’n)
-	auto colors = rabv::Color::devideColors(3 /*¶¬‚·‚éF”*/);
+	//è¦‹ã‚„ã™ã„è‰²ã®è‡ªå‹•ç”Ÿæˆ(by ç¦åœ°)
+	auto colors = rabv::Color::devideColors(3 /*ç”Ÿæˆã™ã‚‹è‰²æ•°*/);
 
 	rab->addText("Color1", 0, 50, 30, colors[0]);
 	rab->addText("Color2", 100, 50, 30, colors[1]);
@@ -207,49 +207,49 @@ int main(int argc, char *argv[])
 
 
 
-	/*** ‚±‚±‚©‚çViewerg—pƒTƒ“ƒvƒ‹ ***/
+	/*** ã“ã“ã‹ã‚‰Viewerä½¿ç”¨ã‚µãƒ³ãƒ—ãƒ« ***/
 
-	//•\¦(•Â‚¶‚é‚Ü‚Åƒ‹[ƒv, Viewer‚ğg‚¤)
+	//è¡¨ç¤º(é–‰ã˜ã‚‹ã¾ã§ãƒ«ãƒ¼ãƒ—, Viewerã‚’ä½¿ã†)
 	auto viewer1 = rabv::Viewer::create(
-		"Viewer1",	//Viewer‚Ìƒ^ƒCƒgƒ‹
-		rab			//•\¦‚·‚érabƒf[ƒ^
+		"Viewer1",	//Viewerã®ã‚¿ã‚¤ãƒˆãƒ«
+		rab			//è¡¨ç¤ºã™ã‚‹rabãƒ‡ãƒ¼ã‚¿
 	);
 	viewer1->spinLoop();
 
 
 
-	/*** ‚±‚±‚©‚çWriterg—pƒTƒ“ƒvƒ‹ ***/
+	/*** ã“ã“ã‹ã‚‰Writerä½¿ç”¨ã‚µãƒ³ãƒ—ãƒ« ***/
 
-	//•Û‘¶
+	//ä¿å­˜
 	rabv::Writer::saveRabFile(
-		"./test1.rab",	//•Û‘¶ƒtƒ@ƒCƒ‹ƒpƒX(‘Š‘ÎƒpƒX‚Ìê‡DƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚Å“WŠJ)
-		rab				//•Û‘¶‚·‚érabƒf[ƒ^(rabv::Rab::Ptr)
+		"./test1.rab",	//ä¿å­˜ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(ç›¸å¯¾ãƒ‘ã‚¹ã®å ´åˆï¼ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã§å±•é–‹)
+		rab				//ä¿å­˜ã™ã‚‹rabãƒ‡ãƒ¼ã‚¿(rabv::Rab::Ptr)
 	);
 
-	//Writer‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğì‚Á‚Ä•Û‘¶
+	//Writerã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œã£ã¦ä¿å­˜
 	auto writer = rabv::Writer::create("./test2.rab");
 	writer->setRab(rab);
 	writer->save();
 	
-	//•\¦(•Â‚¶‚é‚Ü‚Åƒ‹[ƒv, Viewer‚ğg‚¤)
+	//è¡¨ç¤º(é–‰ã˜ã‚‹ã¾ã§ãƒ«ãƒ¼ãƒ—, Viewerã‚’ä½¿ã†)
 	rabv::Viewer::Ptr viewer2 = writer->visualize();
 	viewer2->spinLoop();
 
 
 
 
-	/*** ‚±‚±‚©‚çReaderg—pƒTƒ“ƒvƒ‹ ***/
+	/*** ã“ã“ã‹ã‚‰Readerä½¿ç”¨ã‚µãƒ³ãƒ—ãƒ« ***/
 
-	//Reader‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬DƒCƒ“ƒXƒ^ƒ“ƒX¶¬‚ÉƒpƒX‚ğ“n‚·‚Æ“Ç‚İ‚İ‚Ü‚Å©“®‚Ås‚¤
+	//Readerã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆï¼ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç”Ÿæˆæ™‚ã«ãƒ‘ã‚¹ã‚’æ¸¡ã™ã¨èª­ã¿è¾¼ã¿ã¾ã§è‡ªå‹•ã§è¡Œã†
 	auto reader = rabv::Reader::create();
 	
-	//ƒpƒXw’è
+	//ãƒ‘ã‚¹æŒ‡å®š
 	reader->setPath("./test2.rab");
 	
-	//“Ç‚İ‚İ
+	//èª­ã¿è¾¼ã¿
 	reader->load();
 	
-	//•\¦(•Â‚¶‚é‚Ü‚Åƒ‹[ƒv, Viewer‚ğg‚¤)
+	//è¡¨ç¤º(é–‰ã˜ã‚‹ã¾ã§ãƒ«ãƒ¼ãƒ—, Viewerã‚’ä½¿ã†)
 	rabv::Viewer::Ptr viewer3 = writer->visualize();
 	viewer3->spinLoop();
 
