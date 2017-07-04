@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
 		"sample1",                 // Unique name of the pointcloud (from)
 		"sample2",                 // Unique name of the pointcloud (to)
 		corrs2,                    // Correspondence (pcl::CorrespondencesPtr)
+		2,                         // Line width
 		rabv::Color(255, 255, 128) // Color (r, g, b)
 	);
 
@@ -143,6 +144,7 @@ int main(int argc, char *argv[])
 		"sample1",                 // Unique name of the pointcloud (from)
 		"sample2",                 // Unique name of the pointcloud (to)
 		corrs3,                    // Correspondence (std::vector<std::pair<int, int>>)
+		3,                         // Line width
 		rabv::Color(255, 128, 128) // Color (r, g, b)
 	);
 
@@ -151,6 +153,7 @@ int main(int argc, char *argv[])
 	rabv::Lines line1;
 
 	rabv::Lines line2(
+		3.0,                       // Line width
 		rabv::Color(128, 128, 255) // Color (r, g, b)
 	);
 
