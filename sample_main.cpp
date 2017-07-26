@@ -18,18 +18,10 @@ int main(int argc, char *argv[])
 	const int sample_point_num = 100;
 	const int sample_corr_num = 5;
 
-<<<<<<< HEAD
-	//サンプルデータ用乱数生成器
-=======
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	std::mt19937 mt(20150403);
 	std::normal_distribution<float> nd(0.0, 0.2);
 	std::uniform_int_distribution<int> ud(0, sample_point_num);
 
-<<<<<<< HEAD
-	//サンプル用PointCloudを生成
-=======
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	pcl::PointCloud<pcl::PointXYZ>::Ptr sample_cloud(new pcl::PointCloud<pcl::PointXYZ>());
 	for (int i = 0; i < sample_point_num; ++i)
 	{
@@ -52,10 +44,6 @@ int main(int argc, char *argv[])
 		sample_point_normal->push_back(pn);
 	}
 
-<<<<<<< HEAD
-	//サンプル用Correspondenceを生成
-=======
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	pcl::Correspondences corrs1;
 	pcl::CorrespondencesPtr corrs2(new pcl::Correspondences());
 	std::vector<std::pair<int, int>> corrs3;
@@ -73,17 +61,6 @@ int main(int argc, char *argv[])
 
 
 
-<<<<<<< HEAD
-	/*** ここからRab使用サンプル ***/
-
-	//Rabのインスタンスを生成
-	auto rab = rabv::Rab::create();
-
-	//PointCloudの追加
-	rab->addCloud(
-		"sample1",		//識別名(それぞれ別名であること)
-		sample_cloud	//データ，PointCloud::Ptrで与える
-=======
 	//
 	// Rab Class Usage
 	//
@@ -96,41 +73,19 @@ int main(int argc, char *argv[])
 	rab->addCloud(
 		"sample1",   // Unique name of the pointcloud
 		sample_cloud // Pointcloud
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 
 	rab->addCloud(
-<<<<<<< HEAD
-		"sample2",						//識別名
-		sample_cloud,					//データ
-		1,								//点の大きさ
-		rabv::Color(255, 255, 128),		//色(R, G, B)
-		rabv::Point(2.0, 0.0, 0.0),		//平行移動オフセット(x, y, z)
-		rabv::Rotation(0.5, 0.0, 0.0)	//回転(x-axis, y-axis, z-axis)
-=======
 		"sample2",                    // Unique name
 		sample_cloud,                 // Pointcloud
 		1,                            // Point size
 		rabv::Color(255, 255, 128),   // Color (r, g, b)
 		rabv::Point(2.0, 0.0, 0.0),   // Offset of tlanslation (x, y, z)
 		rabv::Rotation(0.5, 0.0, 0.0) // Rotation (X-axis, Y-axis, Z-axis)
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 
 	// 2.2. Add a pointcloud and normal together
 	rab->addCloudNormal(
-<<<<<<< HEAD
-		"sample3",						//識別名
-		sample_point_normal,			//データ
-		1,								//点の大きさ
-		rabv::Color(255, 0, 128),		//色(R, G, B)
-		rabv::Point(3.0, 0.0, 0.0),		//平行移動オフセット(x, y, z)
-		rabv::Rotation(),				//回転なし
-		1,								//法線の密度
-		0.05,							//法線の長さ
-		1,								//法線の太さ
-		rabv::Color(0, 255, 255)		//法線の色
-=======
 		"sample3",                  // Unique name
 		sample_point_normal,        // Pointcloud and normals
 		1,                          // Point size
@@ -141,67 +96,10 @@ int main(int argc, char *argv[])
 		0.05,                       // Length of normals
 		1,                          // Width of normals
 		rabv::Color(0, 255, 255)    // Color of normals
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 	
 	// 2.3. Add a normal after "addPointcloud"
 	rab->addNormal(
-<<<<<<< HEAD
-		"sample1",					//識別名(PointCloudとそろえる)
-		sample_normal,				//データ
-		1,							//法線の密度
-		0.05,						//法線の長さ
-		2,							//法線の太さ
-		rabv::Color(255, 0, 128)	//法線の色
-	);
-
-
-
-	//CoordinateSystemの追加(絶対座標系)
-	rab->addCoordinateSystem(
-		0.3	//スケール
-	);
-	//CoordinateSystemの追加(点群座標系)
-	rab->addCoordinateSystem(
-		0.2,			//スケール
-		"sample2"		//PointCloud識別名
-	);
-
-	//Correspondenceの追加
-	rab->addCorrespondence(
-		"sample1",	//PointCloud識別名(from)
-		"sample2",	//PointCloud識別名(to)
-		corrs1		//データ(pcl::Correspondences)
-	);
-
-	rab->addCorrespondence(
-		"sample1",					//PointCloud識別名(from)
-		"sample2",					//PointCloud識別名(to)
-		corrs2,						//データ(pcl::CorrespondencesPtrもOK)
-		rabv::Color(255, 255, 128)	//色(R, G, B)
-	);
-
-	rab->addCorrespondence(
-		"sample1",					//PointCloud識別名(from)
-		"sample2",					//PointCloud識別名(to)
-		corrs3,						//データ(std::vector<std::pair<int, int>>もOK)
-		rabv::Color(255, 128, 128)	//色(R, G, B)
-	);
-
-	//Lineの追加(先にLinesを生成しておく場合)
-	rabv::Lines line1(
-		"line1"	//識別名(それぞれ別名であること)
-	);
-	rabv::Lines line2(
-		"line2",					//識別名(それぞれ別名であること)
-		rabv::Color(128, 128, 255)	//色(R, G, B)
-	);
-
-	//LinesにLineを追加
-	line1.addLine(
-		rabv::Point(1.0, 0.0, 0.0),	//from座標(X, Y, Z)
-		rabv::Point(1.0, 0.0, 1.0)	//to座標(X, Y, Z)
-=======
 		"sample1",                  // Unique name of the corresponding pointcloud
 		sample_normal,              // Pointcloud
 		1,                          // Density of normals
@@ -262,7 +160,6 @@ int main(int argc, char *argv[])
 	line1.addLine(
 		rabv::Point(1.0, 0.0, 0.0), // Point (x, y, z) for "from"
 		rabv::Point(1.0, 0.0, 1.0)  // Point (x, y, z) for "to"
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 	
 	line2.addLine(
@@ -284,21 +181,6 @@ int main(int argc, char *argv[])
 		line2    // rabv::Lines
 	);
 
-<<<<<<< HEAD
-	//Linesをwriterに追加
-	rab->addLines(line1);
-	rab->addLines(line2);
-
-	//Lineの追加(逐次識別名を指定, ちょっと遅い)
-	//第一引数に識別名が増える．以降は先にLinesを生成しておく場合と同様
-	rab->addLine("line3", rabv::Point(0.0, 0.0, 0.0), rabv::Point(2.0, 0.0, 0.0));
-	rab->addLine("line3", pcl::PointXYZ(2.0, 1.0, 0.0), pcl::PointXYZ(0.0, 1.0, 0.0));
-	rab->addLine("line3", rabv::Line({ 0.0, 1.0, 0.0 }, { 0.0, 0.0, 0.0 }));
-
-	//Textの追加
-	rab->addText(
-		"Text1"		//表示Text
-=======
 	// 5.2 Add lines (into rab, directly)
 	rab->addLine(
 		"line3",                    // Unique name of the lines
@@ -316,44 +198,9 @@ int main(int argc, char *argv[])
 	// 6.1 Add 2D text
 	rab->addText(
 		"Text1"	// Text
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 
 	rab->addText(
-<<<<<<< HEAD
-		"Text2",				//表示Text
-		300, 0,					//表示座標(X, Y)
-		30,						//文字サイズ
-		rabv::Color(0, 255, 0)	//色(R, G, B)
-	);
-
-	//Text3Dの追加
-	rab->addText3D(
-		"Text3"			//表示Text
-	);
-	rab->addText3D(
-		"Text4",					//表示Text
-		rabv::Point(2.0, 0.5, 0.1),	//表示座標(X, Y, Z)
-		0.1,						//文字サイズ
-		rabv::Color(0, 255, 0)		//色(R, G, B)
-	);
-
-	//FlatText3Dの追加
-	rab->addFlatText3D(
-		"Text5",					//表示Text
-		rabv::Point(1.0, 0.5, 0.0)	//表示座標(X, Y, Z)
-	);
-	rab->addFlatText3D(
-		"Text6",						//表示Text
-		rabv::Point(1.0, 0.5, 0.1),		//表示座標(X, Y, Z)
-		0.1,							//文字サイズ
-		rabv::Color(0, 255, 0),			//色(R, G, B)
-		rabv::Rotation(0.5, 0.0, 0.0)	//回転(x-axis, y-axis, z-axis)
-	);
-
-	//見やすい色の自動生成(by 福地)
-	auto colors = rabv::Color::devideColors(3 /*生成する色数*/);
-=======
 		"Text2",               // Text
 		300, 0,                // Position (x, y)
 		30,                    // Font size
@@ -384,7 +231,6 @@ int main(int argc, char *argv[])
 		rabv::Rotation(0.5, 0.0, 0.0) // Rotation (X-axis, Y-axis, Z-axis)
 	);
 
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 
 	// 7. Add a cube
 	rab->addCube("cube1", rabv::Point(-1.0, -1.0, -1.0), rabv::Point(-0.5, -0.5, -0.5));
@@ -398,14 +244,6 @@ int main(int argc, char *argv[])
 
 
 
-<<<<<<< HEAD
-	/*** ここからViewer使用サンプル ***/
-
-	//表示(閉じるまでループ, Viewerを使う)
-	auto viewer1 = rabv::Viewer::create(
-		"Viewer1",	//Viewerのタイトル
-		rab			//表示するrabデータ
-=======
 	//
 	// Viewer Class Usage
 	//
@@ -414,23 +252,11 @@ int main(int argc, char *argv[])
 	const auto& viewer1 = rabv::Viewer::create(
 		"Viewer1",	// Title of viewer
 		rab			// Rab data
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	);
 	viewer1->spinLoop();
 
 
 
-<<<<<<< HEAD
-	/*** ここからWriter使用サンプル ***/
-
-	//保存
-	rabv::Writer::saveRabFile(
-		"./test1.rab",	//保存ファイルパス(相対パスの場合．カレントディレクトリで展開)
-		rab				//保存するrabデータ(rabv::Rab::Ptr)
-	);
-
-	//Writerのインスタンスを作って保存
-=======
 	//
 	// Writer Class Usage
 	//
@@ -442,18 +268,12 @@ int main(int argc, char *argv[])
 	);
 
 	// 10.2. Save the rab data (by using an instance of rabv::Writer)
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	auto writer = rabv::Writer::create("./test2.rab");
 	writer->setRab(rab);
 	writer->save();
 	
-<<<<<<< HEAD
-	//表示(閉じるまでループ, Viewerを使う)
-	rabv::Viewer::Ptr viewer2 = writer->visualize();
-=======
 	// 11. Visualize from the writer's rab data
 	const auto& viewer2 = writer->visualize();
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	viewer2->spinLoop();
 
 
@@ -462,21 +282,6 @@ int main(int argc, char *argv[])
 	// Reader Class Usage
 	//
 
-<<<<<<< HEAD
-	/*** ここからReader使用サンプル ***/
-
-	//Readerのインスタンスを生成．インスタンス生成時にパスを渡すと読み込みまで自動で行う
-	auto reader = rabv::Reader::create();
-	
-	//パス指定
-	reader->setPath("./test2.rab");
-	
-	//読み込み
-	reader->load();
-	
-	//表示(閉じるまでループ, Viewerを使う)
-	rabv::Viewer::Ptr viewer3 = writer->visualize();
-=======
 	// 12.1. Make an instance of rabv::Rab
 	// If give a path of rab data, it load the data automatically.
 	auto reader = rabv::Reader::create();
@@ -489,7 +294,6 @@ int main(int argc, char *argv[])
 	
 	// 13. Visualize from the reader's rab data
 	const auto& viewer3 = reader->visualize();
->>>>>>> 48c899ed15f48337747564afdeacf00b34e4e4f0
 	viewer3->spinLoop();
 
 	return 0;

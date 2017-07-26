@@ -926,7 +926,7 @@ namespace rabv
 			coordinate_systems.unique_insert(name, coordinate_system);
 		}
 		template<typename... Args>
-		void addCoordinateSystem(const std::string& name = "world", Args... args)
+		void addCoordinateSystem(const std::string& name, Args... args)
 		{
 			addCoordinateSystem(name, rabv::CoordinateSystem(std::forward<Args>(args)...));
 		}
