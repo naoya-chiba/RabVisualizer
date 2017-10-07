@@ -1124,6 +1124,11 @@ namespace rabv
 		{
 			return pcl_viewer;
 		}
+		
+		std::string viewerName() const
+		{
+			return viewer_name;
+		}
 
 	private:
 		const std::string viewer_name;
