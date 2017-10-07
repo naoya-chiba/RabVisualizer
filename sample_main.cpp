@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 	rab->addCube("cube1", rabv::Point(-1.0, -1.0, -1.0), rabv::Point(-0.5, -0.5, -0.5));
 
 	// 8. Generate good colors to visualize
-	const auto& colors = rabv::Color::devideColors(3 /*The number of color*/);
+	const auto& colors = rabv::Color::divideColors(3 /*The number of color*/);
 
 	rab->addText("Color1", 0,   50, 30, colors[0]);
 	rab->addText("Color2", 100, 50, 30, colors[1]);
