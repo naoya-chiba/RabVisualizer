@@ -185,7 +185,7 @@ namespace rabv
 			return rabv::Color();
 		}
 
-		static std::vector<rabv::Color> devideColors(const int step)
+		static std::vector<rabv::Color> divideColors(const int step)
 		{
 			std::vector<rabv::Color> color_vec;
 			if (step < 1)
@@ -1123,6 +1123,11 @@ namespace rabv
 		pcl::visualization::PCLVisualizer::Ptr getPCLVisualizer() const
 		{
 			return pcl_viewer;
+		}
+		
+		std::string viewerName() const
+		{
+			return viewer_name;
 		}
 
 	private:
