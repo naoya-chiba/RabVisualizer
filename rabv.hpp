@@ -1260,7 +1260,7 @@ namespace rabv
 			return rabv::Viewer::create(rab_name, getRab());
 		}
 
-		static void saveRabFile(const std::string& rab_path_, rabv::Rab::Ptr& rab_)
+		static void saveRabFile(const std::string& rab_path_, const rabv::Rab::Ptr& rab_)
 		{
 			rabv::Writer writer(rab_path_, rab_);
 			writer.save();
